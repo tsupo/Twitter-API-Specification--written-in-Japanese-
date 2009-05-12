@@ -1,7 +1,7 @@
-Twitter API 仕様書
+﻿Twitter API 仕様書
   日本語訳: tsupo (http://watcher.moe-nifty.com/  mailto:tsupo@na.rim.or.jp)
 
-  http://apiwiki.twitter.com/Twitter-API-Documentation の2009年5月7日版の大雑把な日本語訳
+  http://apiwiki.twitter.com/Twitter-API-Documentation の2009年5月11日版の大雑把な日本語訳
   (ただし、そのまま翻訳したわけではなく、一部、意訳。また、現時点の実装状況に合わせて、内容を修正している)
 
 
@@ -15,7 +15,7 @@ Twitter API 仕様書
   アカウント関連のAPI: verify_credentials, end_session, archive, update_location, update_delivery_device, update_profile_colors, update_profile_image, update_profile_background_image, rate_limit_status, update_profile
   お気に入り関連のAPI: favorites, create, destroy
   IM関連のAPI: follow, leave
-  ブロック関連のAPI: create, destroy
+  ブロック関連のAPI: create, destroy, blocking, ids (blocking)
   補助API: test, downtime_schedule
   検索関連のAPI: search, trends, trends/current, trends/daily, trends/weekly
   ストリーミングAPI: firehose, gardenhose, spritzer, birddog, shadow
@@ -1417,6 +1417,37 @@ IM関連のAPI
      API制限:  適用対象外
 
 
+  blocking
+     自分がブロックしているユーザの一覧を取得する
+
+     URL: http://twitter.com/blocks/blocking.format
+       (format は xml, json のうちのいずれかを指定)
+
+     引数:
+        page=ページ番号 (オプション)
+          (1ページを20件とみなしたときの)ページ番号を指定することで、ブロックしているユーザの一覧を20件単位で取得する
+
+             例:
+               http://twitter.com/blocks/blocking.xml?page=1
+                 API実行時点で1件目から20件目に相当する「ブロックしているユーザ」の一覧を XML 形式で取得する
+
+     メソッド: GET
+     API制限:  適用対象
+
+
+  ids (blocking)
+     自分がブロックしているユーザのID一覧(配列)を取得する
+
+     URL: http://twitter.com/blocks/blocking/ids.format
+       (format は xml, json のうちのいずれかを指定)
+
+     引数:
+        なし
+
+     メソッド: GET
+     API制限:  適用対象
+
+
 補助API
   test
      成功すれば(Twitter が正常に稼動していれば)、"ok" という文字列を http ステータスコード 200 OK で返す
@@ -1875,6 +1906,8 @@ IM関連のAPI
 
 
 変更履歴
+  2009年 5月12日 第二十二版 (2009年5月11日版原本がベース)
+     (1) 「ブロック関連のAPI」に blocking と ids (blocking) を追加
   2009年 5月 7日 第二十一版 (2009年5月7日版原本がベース)
      (1) 「API の実行回数制限」に「1日あたりの実行回数上限」に関する説明を追加
      (2) 「ソーシャルグラフ関連のAPI」の ids (friends) に“page 引数”を追加
