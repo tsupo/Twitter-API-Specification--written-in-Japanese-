@@ -1,7 +1,7 @@
 ﻿Twitter API 仕様書
   日本語訳: tsupo (http://watcher.moe-nifty.com/  mailto:tsupo@na.rim.or.jp)
 
-  http://apiwiki.twitter.com/Twitter-API-Documentation の2009年5月11日版の大雑把な日本語訳
+  http://apiwiki.twitter.com/Twitter-API-Documentation の2009年5月12日版の大雑把な日本語訳
   (ただし、そのまま翻訳したわけではなく、一部、意訳。また、現時点の実装状況に合わせて、内容を修正している)
 
 
@@ -18,7 +18,7 @@
   ブロック関連のAPI: create, destroy, blocking, ids (blocking)
   補助API: test, downtime_schedule
   検索関連のAPI: search, trends, trends/current, trends/daily, trends/weekly
-  ストリーミングAPI: firehose, gardenhose, spritzer, birddog, shadow
+  ストリーミングAPI: firehose, gardenhose, spritzer, birddog, shadow, follow
 
 
 認証
@@ -1682,12 +1682,15 @@ IM関連のAPI
 ストリーミングAPI
   よりリアルタイムに近い状態で Twitter の各種情報を取得するための API である
 
+  注意: ストリーミングAPIは、アルファテスト版であり、予告なく仕様を変更したり、サービスを停止したりすることがある。
+        運用状況(負荷状況)に応じてアクセス制限を実施することもある。
+
     ・認証
         BASIC認証
 
     ・アクセス制限および実行回数制限
-        spritzer: 制限なし
-        firehose, gardenhose: 許可されたユーザのみ実行可能
+        spritzer, follow: 制限なし
+        firehose, gardenhose, birddog, shadow: 許可されたユーザのみ実行可能
         不正な認証情報でのアクセスを繰り返すと、当該IPアドレスからのアクセスを自動的かつ一時的に排除する
 
     ・ストリームへの接続方法
@@ -1720,6 +1723,7 @@ IM関連のAPI
         - ベストエフォート
         - 順序不同
         - 通常、1回取得した情報は、もう二度と取得できない
+        - 現行の版はアルファテスト版
 
 
   firehose
@@ -1831,7 +1835,26 @@ IM関連のAPI
                   follow=12 13 15 16 20 87
 
      メソッド: POST
-     制限: なし (?) [API仕様書原本に明示されていない]
+     制限: 許可されたユーザのみ実行可能
+
+
+  follow
+    ID で指定したユーザの public な情報を取得する  (private 設定しているユーザの情報は取得できない) [birddog の規模縮小・簡易版]
+    この API を使うことで、最大 200 ユーザの発言を追いかけることができる
+
+     URL: http://stream.twitter.com/follow.format
+       (format は xml, json のうちのいずれかを指定)
+
+     引数:
+        follow
+          追跡対象のユーザの ID をスペース(空白文字)区切りで指定する
+
+             例:
+               http://stream.twitter.com/follow.json に対して、以下のような内容の application/x-www-form-urlencoded 形式のデータを POST する
+                  follow=12 13 15 16 20 87
+
+     メソッド: POST
+     制限: なし (誰でも実行可能)
 
 
 
@@ -1876,6 +1899,11 @@ IM関連のAPI
     2009年3月31日、更なる仕様変更が実施された。“@ユーザ名”が冒頭以外のところに含まれる場合も「返信(言及)」として扱われるようになった一方、“@ユーザ名”が含まれないものは「返信(言及)」としては扱われないようになった。
     2009年4月6日、「返信」を取得する API が replies から mentions に変更された(「返信」から「言及」に変更された)
 
+    2009年5月13日、「自分の friend」が「自分の friend ではない人」に対して行なった「返信」が「自分の friends_timeline」に含まれないようになった(2007年秋以前の仕様に戻った)。
+    あくまでも friends_timeline の(応答の)仕様変更であり、update の仕様自体には変更はない。
+    また、mentions(および replies)で取得可能な内容に関しては、2009年4月6日時点の仕様のまま変更はない。
+
+
 
   IM関連
     少なくとも2009年1月12日ごろから(もう少し前からの可能性あり)、Twitter の「設定」(http://twitter.com/account/settings) からIM関連の設定メニューが消えている。
@@ -1906,6 +1934,10 @@ IM関連のAPI
 
 
 変更履歴
+  2009年 5月13日 第二十三版 (2009年5月12日版原本がベース)
+     (1) 「ストリーミングAPI」に“注意”を追加。その他、説明を修正、追加
+     (2) 「ストリーミングAPI」に follow を追加
+     (3) 「備考」の“update による「返信」”に追記
   2009年 5月12日 第二十二版 (2009年5月11日版原本がベース)
      (1) 「ブロック関連のAPI」に blocking と ids (blocking) を追加
   2009年 5月 7日 第二十一版 (2009年5月7日版原本がベース)
