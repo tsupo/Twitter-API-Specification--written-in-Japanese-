@@ -1,7 +1,7 @@
 ﻿Twitter API 仕様書
   日本語訳: tsupo (http://watcher.moe-nifty.com/  mailto:tsupo@na.rim.or.jp)
 
-  http://apiwiki.twitter.com/Twitter-API-Documentation の2009年5月12日版の大雑把な日本語訳
+  http://apiwiki.twitter.com/Twitter-API-Documentation の2009年5月14日版の大雑把な日本語訳
   (ただし、そのまま翻訳したわけではなく、一部、意訳。また、現時点の実装状況に合わせて、内容を修正している)
 
 
@@ -15,7 +15,7 @@
   アカウント関連のAPI: verify_credentials, end_session, archive, update_location, update_delivery_device, update_profile_colors, update_profile_image, update_profile_background_image, rate_limit_status, update_profile
   お気に入り関連のAPI: favorites, create, destroy
   IM関連のAPI: follow, leave
-  ブロック関連のAPI: create, destroy, blocking, ids (blocking)
+  ブロック関連のAPI: create, destroy, exists, blocking, ids (blocking)
   補助API: test, downtime_schedule
   検索関連のAPI: search, trends, trends/current, trends/daily, trends/weekly
   ストリーミングAPI: firehose, gardenhose, spritzer, birddog, shadow, follow
@@ -917,7 +917,9 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
 
    exists
      指定した2ユーザの間の friend 関係を調べる
-       (format は xml, json のうちのいずれかを指定。もしくは何も指定しない)
+
+     URL: http://twitter.com/friendships/exists.format
+       (format は xml, json のうちのいずれかを指定)
 
      引数:
         user_a=調査対象のうち1人目のユーザID または id=スクリーン名  (必須)
@@ -1415,6 +1417,43 @@ IM関連のAPI
 
      メソッド: POST または DELETE
      API制限:  適用対象外
+
+
+   exists
+     指定したユーザをブロックしているかどうかを調べる。
+     ブロックをしていない場合、あるいは当該ユーザアカウントが存在しない場合は 404 Not Found が返る。
+     ブロックをしている場合は、当該ユーザの情報(http://twitter.com/users/show/id.format で返ってくる情報と同じ形式)が返る。
+
+     引数はすべてオプションであるが、少なくとも1つは指定する必要がある
+
+     URL: http://twitter.com/blocks/exists/id.format
+       (format は xml, json のうちのいずれかを指定)
+
+     引数:
+        id=ユーザID または スクリーン名 (オプション)
+          指定したユーザをブロックしているかどうかを調べる
+
+           例:
+             http://twitter.com/blocks/exists/bob.xml
+                 スクリーン名 bob をブロックしているかどうかを調べるよう指示し、結果を XML 形式で受け取る
+
+        user_id=ユーザID  (オプション)
+           指定した ID のユーザをブロックしているかどうかを調べる
+
+           例:
+             http://twitter.com/blocks/exists.xml?user_id=1401881
+                 ユーザID 1401881 をブロックしているかどうかを調べる
+
+        screen_name=スクリーン名  (オプション)
+           指定したスクリーン名のユーザをブロックしているかどうかを調べる
+
+          例:
+            http://twitter.com/blocks/exists.xml?screen_name=101010
+                 スクリーン名 101010 をブロックしているかどうかを調べる
+                 (この場合、101010 はユーザIDではなく、スクリーン名であることに注意)
+
+     メソッド: GET
+     API制限:  適用対象
 
 
   blocking
@@ -1923,6 +1962,8 @@ IM関連のAPI
       Failed to validate oauth signature or token
     に変更された。
 
+    2009年5月13日、アクセストークン取得時のレスポンスに、ユーザID(user_id)とスクリーン名(screen_name)も含まれるようになった
+
 
   ストリーミングAPI
     2009年4月以降に FriendFeed で(Twitter のフィードを取り込むために)使用している API がこの「ストリーミングAPI」であると思われる
@@ -1934,6 +1975,10 @@ IM関連のAPI
 
 
 変更履歴
+  2009年 5月14日 第二十四版 (2009年5月14日版原本がベース)
+     (1) 「フレンド関連のAPI」の exists の説明を修正
+     (2) 「ブロック関連のAPI」に exists を追加
+     (3) 「備考」の“OAuth 関連”に追記
   2009年 5月13日 第二十三版 (2009年5月12日版原本がベース)
      (1) 「ストリーミングAPI」に“注意”を追加。その他、説明を修正、追加
      (2) 「ストリーミングAPI」に follow を追加
