@@ -1619,7 +1619,7 @@ OAuth関連
   OAuth を使って Twitter の API を実行する手順を、以下に、簡単に示す(厳密な内容・詳細は、OAuth の仕様書等を参照のこと)
 
     準備: アプリケーションを Twitter に登録し、consumer key と consumer secret を取得する
-          http://twitter.com/oauth_clients にアクセスし、登録する
+          http://twitter.com/oauth_clients/new にアクセスし、登録する
 
     ・デスクトップクライアントアプリケーションの場合
       (1) consumer key と consumer secret を使って、リクエストトークン(token と token secret)を取得する
@@ -1645,6 +1645,9 @@ OAuth関連
            英字, 数字, '-', '.', '_', '~'
         エンコード結果に16進数の A ～ F, a ～ f が含まる場合、暗号鍵に関しては小文字、生成した署名は大文字を使う等、大文字、小文字を厳密に使い分けている。
         その他、詳細は、OAuth の仕様書(http://oauth.net/core/1.0/)を参照のこと。
+
+  参考: http://twitter.com/oauth_clients/ にアクセスすると、自分が登録したアプリケーションの一覧が表示されます(すでに登録したアプリケーションがある人のみ)。
+        一方、http://twitter.com/account/connections にアクセスすると、自分がアクセス許可を与えたアプリケーションの一覧が表示されます。
 
 
   oauth/request_token
@@ -2308,6 +2311,9 @@ OAuth関連
 
 
 変更履歴
+  2009年 6月14日 第二十六版 (2009年6月12日版原本がベース)
+     (1) 「OAuth 関連」の“準備”を修正
+     (2) 「OAuth 関連」に“参考”を追加
   2009年 6月12日 第二十五版 (2009年6月12日版原本がベース)
      (1) 「メソッド一覧」を更新
      (2) 「タイムライン関連のAPI」の public_timeline の“API制限”の説明を変更
