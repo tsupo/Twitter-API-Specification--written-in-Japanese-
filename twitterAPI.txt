@@ -1,24 +1,102 @@
 ﻿Twitter API 仕様書
   日本語訳: tsupo (http://watcher.moe-nifty.com/  mailto:tsupo@na.rim.or.jp)
 
-  http://apiwiki.twitter.com/Twitter-API-Documentation の2009年5月14日版の大雑把な日本語訳
+  http://apiwiki.twitter.com/Twitter-API-Documentation の2009年6月12日版の大雑把な日本語訳
   (ただし、そのまま翻訳したわけではなく、一部、意訳。また、現時点の実装状況に合わせて、内容を修正している)
 
 
 メソッド一覧
-  タイムライン関連のAPI: public_timeline, friends_timeline, user_timeline, replies, mentions
-  ステータス関連のAPI: show, update, destroy
-  ユーザ情報関連のAPI: friends, followers, featured, show
-  ダイレクトメッセージ関連のAPI: direct_messages, sent, new, destroy
-  フレンド関連のAPI: create, destroy, exists
-  ソーシャルグラフ関連のAPI: ids (friends), ids (followers)
-  アカウント関連のAPI: verify_credentials, end_session, archive, update_location, update_delivery_device, update_profile_colors, update_profile_image, update_profile_background_image, rate_limit_status, update_profile
-  お気に入り関連のAPI: favorites, create, destroy
-  IM関連のAPI: follow, leave
-  ブロック関連のAPI: create, destroy, exists, blocking, ids (blocking)
-  補助API: test, downtime_schedule
-  検索関連のAPI: search, trends, trends/current, trends/daily, trends/weekly
-  ストリーミングAPI: firehose, gardenhose, spritzer, birddog, shadow, follow
+  タイムライン関連のAPI:
+     statuses/public_timeline
+     statuses/friends_timeline
+     statuses/user_timeline
+     statuses/replies
+     statuses/mentions
+
+  ステータス関連のAPI:
+     statuses/show
+     statuses/update
+     statuses/destroy
+
+  ユーザ情報関連のAPI:
+     statuses/friends
+     statuses/followers
+     statuses/featured
+     users/show
+
+  ダイレクトメッセージ関連のAPI:
+     direct_messages
+     direct_messages/sent
+     direct_messages/new
+     direct_messages/destroy
+
+  フレンド関連のAPI:
+     friendships/create
+     friendships/destroy
+     friendships/exists
+
+  ソーシャルグラフ関連のAPI:
+     friends/ids
+     followers/ids
+
+  アカウント関連のAPI:
+     account/verify_credentials
+     account/end_session
+     account/archive
+     account/update_location
+     account/update_delivery_device
+     account/update_profile_colors
+     account/update_profile_image
+     account/update_profile_background_image
+     account/rate_limit_status
+     account/update_profile
+
+  お気に入り関連のAPI:
+     favorites
+     favorites/create
+     favorites/destroy
+
+  IM関連のAPI:
+     notifications/follow
+     notifications/leave
+
+  ブロック関連のAPI:
+     blocks/create
+     blocks/destroy
+     blocks/exists
+     blocks/blocking
+     blocks/blocking/ids
+
+  補助API: 
+     help/test
+     help/downtime_schedule
+
+  OAuth関連:
+     oauth/request_token
+     oauth/authorize
+     oauth/authenticate
+     oauth/access_token
+
+  検索関連のAPI:
+     search
+     trends
+     trends/current
+     trends/daily
+     trends/weekly
+
+  検索条件保存:
+     saved_searches
+     saved_searches/show
+     saved_searches/create
+     saved_searches/destroy
+
+  ストリーミングAPI:
+     firehose
+     gardenhose
+     spritzer
+     birddog
+     shadow
+     follow
 
 
 認証
@@ -153,7 +231,7 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
                  ステータスID 12345 以降に update されたステータス(のうち、古いものから順に最大20件)を XML 形式で取得する
 
      メソッド: GET
-     API制限:  適用対象外 [訳者による注記: 一定時間あたりの同一IPアドレスからのリクエスト可能回数には上限がある。具体的な回数は不明]
+     API制限:  適用対象 [訳者による注記: 一定時間あたりの同一IPアドレスからのリクエスト可能回数に上限がある。具体的な回数は不明]
 
      注意: public_timeline の取得結果は60秒間キャッシュされる。それよりも短い時間間隔で public_timeline を取得したい場合は
            IM (Jabber Pubsub) を利用すること。[訳者による注記: Jabber Pubsub は1分間に400発言程度まで扱えることを目標にして
@@ -443,12 +521,18 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
            「@ユーザ名」が含まれない、あるいは@ユーザ名」で指定したユーザが存在しない場合、本引数は無視される。
 
         source=クライアント名 (オプション)
-          ステータスの投稿に使用しているクライアント名を指定する。「クライアント名」をWebフォームから申請し、承認を得ることで、Twitter の Webページ上に“from クライアント名”付きで発言が掲載されるようになる。
-          OAuth 認証による API 実行時は、本引数は無視される(OAuth アプリケーション登録時のアプリケーション名、URLが適用される)。
+          ステータスの投稿に使用しているクライアント名を指定する。
+          「クライアント名」をOAuth アプリケーション登録用のWebフォームから申請することで、本オプションを指定しての投稿時、Twitter の Webページ上に“from クライアント名”付きで発言が掲載されるようになる。
+          OAuth 認証による API 実行時は、本引数は無視される(OAuth アプリケーション登録時のアプリケーション名、URLが自動的に適用、掲載される)。
           なお、本引数は公式のAPI仕様書には掲載されていない。
 
      メソッド: POST
      API制限:  適用対象外
+               ただし、一定時間辺りの実行回数上限が設定されている
+                 1日辺り  1000回まで (API による実行以外に、Web での投稿、モバイルでの投稿、SMSでの投稿もカウント対象)
+                 1時間辺り 100回まで (API の実行のみカウント対象。タイムラインの取得等、他のAPIの実行回数も含む)
+               上限に到達すると、それ以降は 403 エラーが返るようになる
+
      注記: Twitter では同一内容のステータスを連続して投稿しようとした場合、最初の投稿以外は無視するようにしている。
            同一内容のステータスを投稿しようとした場合、その応答として status 要素に最初のステータス投稿時のステータスIDが格納されたものが返る
 
@@ -782,6 +866,13 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
                http://twitter.com/direct_messages/sent.xml?max_id=54321
                  メッセージID 54321 以前の送信済みダイレクトメッセージを XML 形式で取得する
 
+        count=件数 (オプション)
+          指定した件数の送信済みダイレクトメッセージを取得する。件数は最大 200 まで指定可能
+
+             例:
+               http://twitter.com/direct_messages/sent.xml?count=5
+                最新の送信済みダイレクトメッセージを5件取得する
+
         page=ページ番号 (オプション)
           (1ページを20件とみなしたときの)ページ番号を指定することで、過去の任意の送信済みダイレクトメッセージを20件単位で取得する
 
@@ -813,7 +904,10 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
 
      メソッド: POST
      API制限:  適用対象外
-
+               ただし、一定時間辺りの実行回数上限が設定されている
+                 1日辺り  1000回まで (API による実行以外に、Web での送信、モバイルでの送信、SMSでの送信もカウント対象)
+                 1時間辺り 100回まで (API の実行のみカウント対象。タイムラインの取得等、他のAPIの実行回数も含む)
+               上限に到達すると、それ以降は 403 エラーが返るようになる
 
   destroy
      ダイレクトメッセージを削除する。メッセージIDの指定は必須。
@@ -878,6 +972,10 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
 
      メソッド: POST
      API制限:  適用対象外
+               ただし、一定時間辺りの実行回数上限が設定されている
+                 1日辺り  1000回まで (API による実行以外に、Web での実行、モバイルでの実行もカウント対象)
+                 1時間辺り 100回まで (API の実行のみカウント対象。タイムラインの取得等、他のAPIの実行回数も含む)
+               上限に到達すると、それ以降は 403 エラーが返るようになる
 
 
   destroy
@@ -935,7 +1033,7 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
 
 ソーシャルグラフ関連のAPI
 
-  ids (friends)
+  friends/ids
      自分の、あるいは指定したユーザが follow しているユーザ(friends)のID一覧(配列)を取得する
 
      URL: http://twitter.com/friends/ids.format
@@ -976,7 +1074,7 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
      API制限:  適用対象
 
 
-  ids (followers)
+  followers/ids
      自分を、あるいは指定したユーザを follow しているユーザ(followers)のID一覧(配列)を取得する
 
      URL: http://twitter.com/followers/ids.format
@@ -1380,7 +1478,7 @@ IM関連のAPI
 ブロック関連のAPI
 
   create
-     指定ユーザをブロックする
+     指定ユーザをブロックする。指定ユーザが friend だった場合、friend から外した上でブロックする
 
      URL: http://twitter.com/blocks/create/id.format
        (format は xml, json のうちのいずれかを指定)
@@ -1474,7 +1572,7 @@ IM関連のAPI
      API制限:  適用対象
 
 
-  ids (blocking)
+  blocking/ids
      自分がブロックしているユーザのID一覧(配列)を取得する
 
      URL: http://twitter.com/blocks/blocking/ids.format
@@ -1514,6 +1612,137 @@ IM関連のAPI
 
      訳者による注記:
         2009年1月21日現在、この API は使えなくなっている (API仕様書原本からも削除されている)
+
+
+OAuth関連
+  OAuth は Twitter の API を実行するにあたって使用可能な認証方式の1つ。BASIC 認証と大きく異なるのは、ユーザのパスワードを知る必要がないという点である。
+  OAuth を使って Twitter の API を実行する手順を、以下に、簡単に示す(厳密な内容・詳細は、OAuth の仕様書等を参照のこと)
+
+    準備: アプリケーションを Twitter に登録し、consumer key と consumer secret を取得する
+          http://twitter.com/oauth_clients にアクセスし、登録する
+
+    ・デスクトップクライアントアプリケーションの場合
+      (1) consumer key と consumer secret を使って、リクエストトークン(token と token secret)を取得する
+      (2) リクエストトークンのうち、token を使って、ユーザにアクセス許可を求めるための URL を生成し、その URL を指定して Web ブラウザを起動する
+      (3) ブラウザに表示された「許可(allow)」ボタンをユーザが押すと、ブラウザに PIN が表示される
+      (4) (アプリケーションで用意したダイアログ等に) PIN を入力してもらう
+      (5) consumer key, consumer secret, token, token secret, PIN を使って、アクセストークン(token2 と token2 secret)を取得する
+      (6) 以後、consumer key, consumer secret, token2, token2 secret を使って、API を実行する
+
+    ・Webアプリケーションの場合
+      (1) consumer key と consumer secret を使って、リクエストトークン(token と token secret)を取得する
+      (2) リクエストトークンのうち、token を使って、ユーザにアクセス許可を求めるための URL を生成し、その URL にリダイレクトする(Web ブラウザに表示させる)
+      (3) ブラウザに表示された「許可(allow)」ボタンをユーザが押すと、(アプリケーション登録時に申請した)コールバック URL にリダイレクトされる
+      (4) コールバック URL へのアクセスを検知したら、その URL 中に含まれる oauth_verifier パラメータを取り出す
+      (5) consumer key, consumer secret, token, token secret, oauth_verifier を使って、アクセストークン(token2 と token2 secret)を取得する
+      (6) 以後、consumer key, consumer secret, token2, token2 secret を使って、API を実行する
+
+    ※ OAuth 1.0 から OAuth 1.0a への移行にあたって、上記の PIN/oauth_verifier が追加されています。
+       なお、上記の手順は Twitter 独自のもので、他の OAuth 採用サイトでは、必ずしも上記手順通りではありません。パラメータ等もサイトによって異なります。
+
+  注意: OAuth 関連 API で使用する引数は、引数の名前を ASCII コードの昇順に並べる必要がある。
+        また、URL エンコード(パーセントエンコード)が必要なものに関して、エンコードの対象となる文字が限定されている。エンコードしてはいけない文字は、以下の通り。
+           英字, 数字, '-', '.', '_', '~'
+        エンコード結果に16進数の A ～ F, a ～ f が含まる場合、暗号鍵に関しては小文字、生成した署名は大文字を使う等、大文字、小文字を厳密に使い分けている。
+        その他、詳細は、OAuth の仕様書(http://oauth.net/core/1.0/)を参照のこと。
+
+
+  oauth/request_token
+    リクエストトークンを取得する
+
+     URL: http://twitter.com/oauth/request_token
+
+     引数:
+	oauth_consumer_key (必須)
+          アプリケーションの consumer key
+
+        oauth_nonce (必須)
+          ランダムな適当な長さの文字列。使用可能な文字は ASCII コードの 0x21 ～ 0x7F の範囲内で printable なもの。
+          一度使用した文字列の再使用は不可(ランダムオラクルであることが望ましいが、実際には、十分に長い時間が経った後なら再使用できる)。
+          [訳者注: 8文字から32文字までの長さで、英数字のみからなる文字列を使うのが無難]
+
+        oauth_signature_method (必須)
+          署名方式。Twitter では常に HMAC-SHA1 を指定する
+
+        oauth_timestamp (必須)
+          本リクエストを実行するための処理を開始した日時(タイムスタンプ)。協定世界時(UTC)で指定する
+
+        oauth_version (オプション)
+          適用する OAuth のバージョン。Twitter では常に 1.0 を指定する
+
+        oauth_signature (必須)
+          上記パラメータ(oauth_consumer_key ～ oauth_version)等を元に生成した文字列を、「アプリケーションの consumer secret(を URL エンコードしたもの)」を暗号鍵として HMAC-SHA1 方式で生成した署名を BASE64 エンコードしたもの
+
+     メソッド: GET
+     API制限:  適用対象外
+
+
+  oauth/authorize
+    ユーザに(Webブラウザ経由で)アクセス許可を求める [本 URL を Web ブラウザに表示させ、ユーザの入力を待つ]
+
+     URL: http://twitter.com/oauth/authorize
+
+     引数:
+	oauth_token (必須)
+          oauth/request_token で取得した token
+
+     メソッド: GET
+     API制限:  適用対象外
+
+
+  oauth/authenticate
+    [oauth/authorize の Webアプリケーション向け簡易版]
+    ユーザが未ログイン状態、あるいは有効なアクセストークンを未取得の場合に限って、ユーザに(Webブラウザ経由で)アクセス許可を求める。
+    すでにログイン済みで、かつ、以前取得したアクセストークンがまだ有効であれば、ユーザにアクセス許可を求める画面を出すことなく、即座に oauth_verifier を返す。
+    (クライアントアプリケーションでは、本 API は使用できない)
+
+     URL: http://twitter.com/oauth/authenticate
+
+     引数:
+	oauth_token (必須)
+          oauth/request_token で取得した token
+
+        force_login (オプション)
+          force_login=true を指定すると、未ログイン状態のユーザをログイン状態にする
+          (アクセス許可時に入力するユーザ名、パスワードを使って、Twitter 側で、自動的にログイン状態にする)
+
+     メソッド: GET
+     API制限:  適用対象外
+
+
+  oauth/access_token
+    アクセストークンを取得する
+     URL: http://twitter.com/oauth/access_token
+
+     引数:
+	oauth_consumer_key (必須)
+          アプリケーションの consumer key
+
+        oauth_nonce (必須)
+          ランダムな適当な長さの文字列。使用可能な文字は ASCII コードの 0x21 ～ 0x7F の範囲内で printable なもの。
+          一度使用した文字列の再使用は不可(ランダムオラクルであることが望ましいが、実際には、十分に長い時間が経った後なら再使用できる)。
+          [訳者注: 8文字から32文字までの長さで、英数字のみからなる文字列を使うのが無難]
+
+        oauth_signature_method (必須)
+          署名方式。Twitter では常に HMAC-SHA1 を指定する
+
+        oauth_timestamp (必須)
+          本リクエストを実行するための処理を開始した日時(タイムスタンプ)。協定世界時(UTC)で指定する
+
+        oauth_token (必須)
+          oauth/request_token で取得した token
+
+        oauth_verifier (必須)
+          PIN (oauth/authorize または oauth/authenticate で取得した oauth_verifier、あるいは oauth/authorize で Web ブラウザ上に表示された PIN) を指定する
+
+        oauth_version (オプション)
+          適用する OAuth のバージョン。Twitter では常に 1.0 を指定する
+
+        oauth_signature (必須)
+          上記パラメータ(oauth_consumer_key ～ oauth_version)等を元に生成した文字列を、『「アプリケーションの consumer secret(を URL エンコードしたもの)」と「oauth/request_token で取得した token secret(を URL エンコードしたもの)」を '&' で連結したもの』を暗号鍵として HMAC-SHA1 方式で生成した署名を BASE64 エンコードしたもの
+
+     メソッド: GET
+     API制限:  適用対象外
 
 
 検索関連のAPI
@@ -1718,6 +1947,106 @@ IM関連のAPI
      API制限:  適用対象
 
 
+検索条件保存
+  saved_searches
+    「(自分の)保存済みの検索条件」を返す
+    (検索条件は、Web からの検索実行時に保存することができる他、saved_searches/create の実行により保存することができる)
+
+     URL: http://twitter.com/saved_searches.format
+       (format は xml, json のうちのいずれかを指定)
+
+     引数:
+       なし
+
+     認証: 必要
+     メソッド: GET
+     API制限:  適用対象
+
+    応答例:
+      XML の場合
+        <?xml version="1.0" encoding="UTF-8"?>
+        <saved_searches type="array">
+          <saved_search>
+            <id>313006</id>
+            <name>twitter api</name>
+            <query>twitter api</query>
+            <position></position>
+            <created_at>Thu Jun 04 21:54:17 +0000 2009</created_at>
+          </saved_search>
+          (略)
+        </saved_searches>
+
+
+  saved_searches/show
+    IDで指定した「(自分の)保存済みの検索条件」を返す
+
+     URL: http://twitter.com/saved_searches/show/id.format
+       (format は xml, json のうちのいずれかを指定)
+
+     引数:
+        id (必須)
+          取得したい「保存済みの検索条件」の ID を指定する
+
+             例:
+               http://twitter.com/saved_searches/show/313006.xml
+                 ID 313006 で登録されている「保存済みの検索条件」を XML 形式で取得する
+
+     認証: 必要
+     メソッド: GET
+     API制限:  適用対象
+
+
+  saved_searches/create
+    指定した「検索条件」を保存する
+
+     URL: http://twitter.com/saved_searches/create.format
+       (format は xml, json のうちのいずれかを指定)
+
+     引数:
+        query (必須)
+          保存したい「検索条件」を指定する
+
+             例:
+               http://twitter.com/saved_searches/create.xml に対して、以下のような内容の application/x-www-form-urlencoded 形式のデータを POST する
+                 query=twitter api
+
+                 「検索条件」として “twitter api”を指定、保存する
+
+     認証: 必要
+     メソッド: POST
+     API制限:  適用対象 (本 API のメソッドは POST であるが、API実行回数制限のカウント対象となる)
+
+    応答例:
+      XML の場合
+        <?xml version="1.0" encoding="UTF-8"?>
+        <saved_search>
+          <id>313006</id>
+          <name>twitter api</name>
+          <query>twitter api</query>
+          <position></position>
+          <created_at>Thu Jun 04 21:54:17 +0000 2009</created_at>
+        </saved_search>
+
+
+  saved_searches/destroy
+    指定した「保存済み検索条件」を破棄する
+
+     URL: http://twitter.com/saved_searches/create.format
+       (format は xml, json のうちのいずれかを指定)
+
+     引数:
+        id (必須)
+          破棄したい「保存済みの検索条件」の ID を指定する
+
+             例:
+               http://twitter.com/saved_searches/destroy/313006.xml
+                 ID 313006 で登録されている「保存済みの検索条件」を破棄する
+
+     認証: 必要
+     メソッド: POST または DELETE
+     API制限:  適用対象 (本 API のメソッドは POST または DELETE であるが、API実行回数制限のカウント対象となる)
+
+
 ストリーミングAPI
   よりリアルタイムに近い状態で Twitter の各種情報を取得するための API である
 
@@ -1767,7 +2096,7 @@ IM関連のAPI
 
   firehose
     public な情報を全て取得する。 (REST API の statuses/public_timeline の「応答」中の status 要素に相当するものがストリームとして流れてくる)
-    この API を使いたい人は、Twitter 関係者にコンタクトを取って欲しい
+    この API を使いたい人は、Twitter 関係者にコンタクトを取って欲しい。この API は特定の団体にのみ、契約を結んだ上で使用を許可している
 
      URL: http://stream.twitter.com/firehose.format
        (format は xml, json のうちのいずれかを指定)
@@ -1962,7 +2291,11 @@ IM関連のAPI
       Failed to validate oauth signature or token
     に変更された。
 
-    2009年5月13日、アクセストークン取得時のレスポンスに、ユーザID(user_id)とスクリーン名(screen_name)も含まれるようになった
+    2009年5月13日、アクセストークン取得時のレスポンスに、ユーザID(user_id)とスクリーン名(screen_name)も含まれるようになった。
+    時期は不明だが、同一クライアントアプリケーションかつ同一ユーザのアクセストークンの複数端末での共存が可能になっている(Twitter に OAuth が導入された当初は共存不可で、いちばん最後に取得したアクセストークンのみが有効だった)。
+    サーバが過負荷の場合、認証失敗のエラーが返ってくることがある。時間をおいて再度実行し直せば問題なく実行できることから、アクセストークンが無効になったわけではないことが確認できている。
+
+    2009年6月10日、OAuth 1.0 から OAuth 1.0a に移行。アクセストークンを入手するまでの手順が変更された(oauth_verifier が必要になった)。アクセストークン入手後の API 実行手順は今まで通り。
 
 
   ストリーミングAPI
@@ -1975,6 +2308,20 @@ IM関連のAPI
 
 
 変更履歴
+  2009年 6月12日 第二十五版 (2009年6月12日版原本がベース)
+     (1) 「メソッド一覧」を更新
+     (2) 「タイムライン関連のAPI」の public_timeline の“API制限”の説明を変更
+     (3) 「ステータス関連のAPI」の update の “source 引数”説明を変更。“API制限”の説明に追記
+     (4) 「ダイレクトメッセージ関連のAPI」の new の“API制限”の説明に追記
+     (5) 「ダイレクトメッセージ関連のAPI」の sent に“count 引数”を追加
+     (6) 「フレンド関連のAPI」の create の“API制限”の説明に追記
+     (7) 「ソーシャルグラフ関連のAPI」の ids (friends), ids (followers) を各々 friends/ids, followers/ids に表記変更
+     (8) 「ブロック関連のAPI」の create の説明に追記
+     (9) 「ブロック関連のAPI」の ids (blocking) を blocking/ids に表記変更
+    (10) 「検索条件保存」の項目を新設。saved_searches, saved_searches/show, saved_searches/create, saved_searches/destroy を追加した
+    (11) 「OAuth 関連」の項目を新設。oauth/request_token, oauth/authorize, oauth/authenticate, oauth/access_token を追加した
+    (12) 「ストリーミングAPI」の firehose の説明に追記
+    (13) 「備考」の“OAuth 関連”に追記
   2009年 5月14日 第二十四版 (2009年5月14日版原本がベース)
      (1) 「フレンド関連のAPI」の exists の説明を修正
      (2) 「ブロック関連のAPI」に exists を追加
@@ -2172,6 +2519,8 @@ IM関連のAPI
      http://apiwiki.twitter.com/
   Twitter API Wiki / OAuth FAQ
      http://apiwiki.twitter.com/OAuth-FAQ
+  Twitter API Wiki / Sign in with Twitter
+     http://apiwiki.twitter.com/Sign-in-with-Twitter
   Twitter Fan Wiki / Hashtags
      http://twitter.pbwiki.com/Hashtags
   #hashtags - What's happening right now on twitter
