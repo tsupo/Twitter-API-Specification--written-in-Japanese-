@@ -1,7 +1,7 @@
 ﻿Twitter API 仕様書
   日本語訳: tsupo (http://watcher.moe-nifty.com/  mailto:tsupo@na.rim.or.jp)
 
-  http://apiwiki.twitter.com/Twitter-API-Documentation の2009年6月12日版の大雑把な日本語訳
+  http://apiwiki.twitter.com/Twitter-API-Documentation の2009年6月16日版の大雑把な日本語訳
   (ただし、そのまま翻訳したわけではなく、一部、意訳。また、現時点の実装状況に合わせて、内容を修正している)
 
 
@@ -1856,7 +1856,7 @@ OAuth関連
 
      認証: 不要
      メソッド: GET
-     API制限:  適用対象
+     API制限:  適用対象 (IPアドレス単位で制限。同一APアドレスからの「検索関連のAPI」の実行は1時間辺り100回まで)
      注記: 
       「検索関連のAPI」の「ユーザID(from_user_id および to_user_id)」とそれ以外のAPIの「ユーザID」は別のものである (詳細は http://code.google.com/p/twitter-api/issues/detail?id=214 を参照)。
       「検索関連のAPI」の「ユーザID」は Twitter 上の実際の「ユーザID」とは違う。本APIを利用するアプリケーションで実際の「ユーザID」が必要な場合は、「スクリーン名(from_user および to_user)を元に、users/show API を使って「スクリーン名」と実際の「ユーザID」の対応関係を取得するようにして欲しい
@@ -1873,7 +1873,7 @@ OAuth関連
 
      認証: 不要
      メソッド: GET
-     API制限:  適用対象
+     API制限:  適用対象  (IPアドレス単位で制限。同一APアドレスからの「検索関連のAPI」の実行は1時間辺り100回まで)
 
 
   trends/current
@@ -1893,7 +1893,7 @@ OAuth関連
 
      認証: 不要
      メソッド: GET
-     API制限:  適用対象
+     API制限:  適用対象  (IPアドレス単位で制限。同一APアドレスからの「検索関連のAPI」の実行は1時間辺り100回まで)
 
 
   trends/daily
@@ -1920,7 +1920,7 @@ OAuth関連
 
      認証: 不要
      メソッド: GET
-     API制限:  適用対象
+     API制限:  適用対象  (IPアドレス単位で制限。同一APアドレスからの「検索関連のAPI」の実行は1時間辺り100回まで)
 
 
   trends/weekly
@@ -1947,7 +1947,7 @@ OAuth関連
 
      認証: 不要
      メソッド: GET
-     API制限:  適用対象
+     API制限:  適用対象  (IPアドレス単位で制限。同一APアドレスからの「検索関連のAPI」の実行は1時間辺り100回まで)
 
 
 検索条件保存
@@ -2311,6 +2311,8 @@ OAuth関連
 
 
 変更履歴
+  2009年 6月17日 第二十七版 (2009年6月16日版原本がベース)
+     「検索関連のAPI」の search, trends, trends/current, trends/daily, trends/weekly の各々の“API制限”の説明に追記
   2009年 6月14日 第二十六版 (2009年6月12日版原本がベース)
      (1) 「OAuth 関連」の“準備”を修正
      (2) 「OAuth 関連」に“参考”を追加
@@ -2517,6 +2519,10 @@ OAuth関連
      http://apiwiki.twitter.com/REST+API+Documentation
   Twitter API Wiki / Streaming API Documentation
      http://apiwiki.twitter.com/Streaming-API-Documentation
+  Twitter API Wiki / Rate limiting (API実行回数制限)
+     http://apiwiki.twitter.com/Rate-limiting
+  Twitter API Wiki / FAQ
+     http://apiwiki.twitter.com/FAQ
   Twitter Development Talk | Google グループ
      http://groups.google.com/group/twitter-development-talk
   Twitter API Announcements | Google グループ
