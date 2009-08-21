@@ -725,24 +725,24 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
      API制限:  適用対象
 
 
-  retweeted_of_me [まもなく登場]
+  retweetes_of_me [まもなく登場]
      自分が投稿した発言のうち(自分以外の)誰かによって retweet されたものの一覧を取得する (最大20件)
 
-     URL: http://twitter.com/statuses/retweeted_of_me.format
+     URL: http://twitter.com/statuses/retweets_of_me.format
        (format は xml, json, atom のうちのいずれかを指定)
 
         since_id=ステータスID  (オプション)
           指定したステータスIDより大きな値のIDの retweet を取得する (指定したIDは取得対象外)
 
              例:
-               http://twitter.com/statuses/retweeted_of_me.xml?since_id=12345
+               http://twitter.com/statuses/retweets_of_me.xml?since_id=12345
                  ステータスID 12345 以降の retweet を XML 形式で取得する
 
         max_id=ステータスID  (オプション)
           指定したステータスID以下の値のIDの retweet を取得する (指定したIDも取得対象内)
 
              例:
-               http://twitter.com/statuses/retweeted_of_me.xml?max_id=54321
+               http://twitter.com/statuses/retweets_of_me.xml?max_id=54321
                  ステータスID 54321 以前の retweet を XML 形式で取得する
 
         page=ページ番号 (オプション)
@@ -750,14 +750,14 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
           ただし、サーバ側で設定されている取得可能ページ数上限(サーバの運用状況次第で設定値は変わる)を超えての取得はできない
 
              例:
-               http://twitter.com/statuses/retweeted_of_me.xml?page=3
+               http://twitter.com/statuses/retweets_of_me.xml?page=3
                  API実行時点で41件目から60件目に相当する retweet を XML 形式で取得する
 
         count=件数  (オプション)
           指定した件数分、retweet を取得する。ただし、200 より大きな値は指定できない 
 
              例:
-               http://twitter.com/statuses/retweeted_of_me.xml?count=5
+               http://twitter.com/statuses/retweets_of_me.xml?count=5
                  最新の retweet を5件、XML 形式で取得する
 
      メソッド: GET
@@ -2762,11 +2762,13 @@ OAuth関連
 
 
 変更履歴
+  2009年 8月21日 第三十版 (2009年8月21日版原本がベース)
+     retweeted_of_me → retweets_of_me に訂正
   2009年 8月21日 第二十九版 (2009年8月21日版原本がベース)
      (1) 「検索関連のAPI」の search に“phrase 引数”を追加。「例」をいくつか追加。「注記」に追記。
      (2) 「アカウント関連のAPI」の verify_credentials の「API制限」の項に追記 (ブルートフォース攻撃対策)
      (3) 「タイムライン関連のAPI」の user_timeline の“page 引数”に「注意」を追加
-     (4) 「タイムライン関連のAPI」に home_timeline, retweeted_by_me, retweeted_to_me, retweeted_of_me を追加
+     (4) 「タイムライン関連のAPI」に home_timeline, retweeted_by_me, retweeted_to_me, retweets_of_me を追加
      (5) 「ステータス関連のAPI」の update に“lat 引数”と“long 引数”を追加
      (6) 「ステータス関連のAPI」に retweet を追加
      (7) 「ユーザ情報関連のAPI」の show の「応答」を更新、「注意」を追加
