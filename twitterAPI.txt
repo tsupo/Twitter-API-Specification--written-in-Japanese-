@@ -1,22 +1,27 @@
 ﻿Twitter API 仕様書
   日本語訳: tsupo (http://watcher.moe-nifty.com/  mailto:tsupo@na.rim.or.jp)
 
-  http://apiwiki.twitter.com/Twitter-API-Documentation の2009年7月2日版の大雑把な日本語訳
+  http://apiwiki.twitter.com/Twitter-API-Documentation の2009年8月21日版の大雑把な日本語訳
   (ただし、そのまま翻訳したわけではなく、一部、意訳。また、現時点の実装状況に合わせて、内容を修正している)
 
 
 メソッド一覧
   タイムライン関連のAPI:
      statuses/public_timeline
+     statuses/home_timeline   [まもなく登場]
      statuses/friends_timeline
      statuses/user_timeline
      statuses/replies
      statuses/mentions
+     statuses/retweeted_by_me [まもなく登場]
+     statuses/retweeted_to_me [まもなく登場]
+     statuses/retweets_of_me  [まもなく登場]
 
   ステータス関連のAPI:
      statuses/show
      statuses/update
      statuses/destroy
+     statuses/retweet         [まもなく登場]
 
   ユーザ情報関連のAPI:
      statuses/friends
@@ -244,6 +249,164 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
            2009年3月下旬から、profile_image_url要素で示される画像(ユーザアイコン)のURLがデフォルトのユーザアイコンのURL固定になっている(バグとして報告されているが、2009年4月14日現在、改修されていない)
 
 
+  home_timeline [まもなく登場]
+     自分と自分の friend の過去24時間以内に update されたステータス(retweetを含む)から最大20件(count引数使用時は最大200件)を取得する。
+
+     注意: friends_timeline との違い
+       home_timeline には retweet が含まれるが、friends_timeline には retweet は含まれない
+       home_timeline には id 引数がないが、friends_timeline には id 引数がある
+       home_timeline には rss 形式がないが、friends_timeline には rss 形式がある
+       将来、friends_timeline は廃止し、home_timeline に一本化する予定
+
+     URL: http://twitter.com/statuses/home_timeline.format
+       (format は xml, json, atom のうちのいずれかを指定)
+
+     引数:
+        since_id=ステータスID  (オプション)
+          指定したIDより大きな値のIDのステータスのみ取得する (指定したIDは取得対象外)
+
+            例:
+               http://twitter.com/statuses/home_timeline.xml?since_id=12345
+                 ステータスID 12345 以降に update された自分と自分の friend の発言(のうち、古いものから順に最大20件)を XML 形式で取得する
+
+        max_id=ステータスID  (オプション)
+          指定したステータスID以下の値のIDのステータスのみ取得する (指定したIDも取得対象内)
+
+            例:
+               http://twitter.com/statuses/home_timeline.xml?max_id=54321
+                 ステータスID 54321 以前に update された自分と自分の friend の発言(のうち、新しいもの最大20件)を XML 形式で取得する
+
+        count=ステータス数 (オプション)
+          指定した数のステータスを取得する。ステータス数は最大 200 まで指定可能
+
+             例:
+               http://twitter.com/statuses/home_timeline.xml?count=5
+                自分の friend の最新の発言を5個取得する
+
+        page=ページ番号 (オプション)
+          (1ページを20件とみなしたときの)ページ番号を指定することで、過去の任意の発言を20件単位で取得する
+          なお、この page オプションは、Twitter の負荷が高いとき等、一時的に使えないようにする(あるいは、指定可能なページ番号の最大値を制限する)ことがある
+
+             例:
+               http://twitter.com/statuses/home_timeline.rss?page=3
+                 API実行時点で41件目から60件目に相当するステータスを RSS 形式で取得する
+
+     メソッド: GET
+     API制限:  適用対象
+
+    応答例:
+      XML の場合
+        <?xml version="1.0" encoding="UTF-8"?>
+        <statuses>
+          <status>
+             <created_at>Fri Jun 19 22:36:52 +0000 2009</created_at>
+             <id>2245071380</id>
+             <text>Last night I dreamt that I was watching a film about someone who gradually realized they were retweeting their own death.</text>
+             <source>web</source>
+             <truncated>false</truncated>
+             <in_reply_to_status_id></in_reply_to_status_id>
+             <in_reply_to_user_id></in_reply_to_user_id>
+             <favorited>false</favorited>
+             <in_reply_to_screen_name></in_reply_to_screen_name>
+             <user>
+                 <id>25753325</id>
+                 <name>Prabhakar Ragde</name>
+                 <screen_name>plragde</screen_name>
+                 <location></location>
+                 <description>Autoredact.</description>
+                 <profile_image_url>http://s3.amazonaws.com/twitter_production/profile_images/105947980/prabhakar_SP_normal.jpg</profile_image_url>
+                 <url></url>
+                 <protected>false</protected>
+                 <followers_count>94</followers_count>
+                 <profile_background_color>709397</profile_background_color>
+                 <profile_text_color>333333</profile_text_color>
+                 <profile_link_color>FF3300</profile_link_color>
+                 <profile_sidebar_fill_color>A0C5C7</profile_sidebar_fill_color>
+                 <profile_sidebar_border_color>86A4A6</profile_sidebar_border_color>
+                 <friends_count>40</friends_count>
+                 <created_at>Sun Mar 22 00:28:55 +0000 2009</created_at>
+                 <favourites_count>0</favourites_count>
+                 <utc_offset>-18000</utc_offset>
+                 <time_zone>Quito</time_zone>
+                 <profile_background_image_url>http://static.twitter.com/images/themes/theme6/bg.gif</profile_background_image_url>
+                 <profile_background_tile>false</profile_background_tile>
+                 <statuses_count>817</statuses_count>
+                 <notifications></notifications>
+                 <verified>false</verified>
+                 <following></following>
+             </user>
+             <retweet_details>
+               <retweet_id>2245122541</retweet_id>
+               <retweeted_at>Fri Jun 19 22:41:13 +0000 2009</retweeted_at>
+               <retweeting_user> 
+                   <id>3191321</id>
+                   <name>Marcel Molina</name>
+                   <screen_name>noradio</screen_name>
+                   <location>San Francisco, CA</location>
+                   <description>Engineer at Twitter, retired Rails Core member, and burgeoning Scala enthusiast.</description>
+                   <profile_image_url>http://s3.amazonaws.com/twitter_production/profile_images/53473799/marcel-euro-rails-conf_normal.jpg</profile_image_url>
+                   <url>http://project.ioni.st</url>
+                   <protected>false</protected>
+                   <followers_count>2265</followers_count>
+                   <profile_background_color>9AE4E8</profile_background_color>
+                   <profile_text_color>333333</profile_text_color>
+                   <profile_link_color>0084B4</profile_link_color>
+                   <profile_sidebar_fill_color>DDFFCC</profile_sidebar_fill_color>
+                   <profile_sidebar_border_color>BDDCAD</profile_sidebar_border_color>
+                   <friends_count>310</friends_count>
+                   <created_at>Mon Apr 02 07:47:28 +0000 2007</created_at>
+                   <favourites_count>96</favourites_count>
+                   <utc_offset>-28800</utc_offset>
+                   <time_zone>Pacific Time (US & Canada)</time_zone>
+                   <profile_background_image_url>http://s3.amazonaws.com/twitter_production/profile_background_images/18156348/jessica_tiled.jpg.jpeg</profile_background_image_url>
+                   <profile_background_tile>true</profile_background_tile>
+                   <statuses_count>3309</statuses_count>
+                   <verified>false</verified>
+               </retweeting_user>
+             </retweet_details> 
+          </status>
+          <status>
+             <created_at>Fri Jun 19 21:52:51 +0000 2009</created_at>
+             <id>1472669360</id>
+             <text>At least I can get your humor through tweets. RT @abdur: I don't mean this in a bad way, but genetically speaking your a cul-de-sac.</text>
+             <source><a href="http://www.tweetdeck.com/">TweetDeck</a></source>
+             <truncated>false</truncated>
+             <in_reply_to_status_id></in_reply_to_status_id>
+             <in_reply_to_user_id></in_reply_to_user_id>
+             <favorited>false</favorited>
+             <in_reply_to_screen_name></in_reply_to_screen_name>
+             <user>
+                 <id>1401881</id>
+                 <name>Doug Williams</name>
+                 <screen_name>dougw</screen_name>
+                 <location>San Francisco, CA</location>
+                 <description>Twitter API Support. Internet, greed, users, dougw and opportunities are my passions.</description>
+                 <profile_image_url>http://s3.amazonaws.com/twitter_production/profile_images/59648642/avatar_normal.png</profile_image_url>
+                 <url>http://www.igudo.com</url>
+                 <protected>false</protected>
+                 <followers_count>1027</followers_count>
+                 <profile_background_color>9ae4e8</profile_background_color>
+                 <profile_text_color>000000</profile_text_color>
+                 <profile_link_color>0000ff</profile_link_color>
+                 <profile_sidebar_fill_color>e0ff92</profile_sidebar_fill_color>
+                 <profile_sidebar_border_color>87bc44</profile_sidebar_border_color>
+                 <friends_count>293</friends_count>
+                 <created_at>Sun Mar 18 06:42:26 +0000 2007</created_at>
+                 <favourites_count>0</favourites_count>
+                 <utc_offset>-18000</utc_offset>
+                 <time_zone>Eastern Time (US & Canada)</time_zone>
+                 <profile_background_image_url>http://s3.amazonaws.com/twitter_production/profile_background_images/2752608/twitter_bg_grass.jpg</profile_background_image_url>
+                 <profile_background_tile>false</profile_background_tile>
+                 <statuses_count>3390</statuses_count>
+                 <notifications>false</notifications>
+                 <following>false</following>
+                 <verified>true</verified>
+             </user>
+          </status>
+           ... (略) ...
+        </statuses> 
+
+
   friends_timeline
      自分の friend の過去24時間以内に update されたステータスから最大20件(count引数使用時は最大200件)を取得する。
      引数 id を指定すれば、その id のユーザの friend のステータスを取得できる
@@ -297,7 +460,7 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
 
         page=ページ番号 (オプション)
           (1ページを20件とみなしたときの)ページ番号を指定することで、過去の任意の発言を20件単位で取得する
-          なお、この page オプションは、Twitter の負荷が高いとき等、一時的に使えないようにすることがある
+          なお、この page オプションは、Twitter の負荷が高いとき等、一時的に使えないようにする(あるいは、指定可能なページ番号の最大値を制限する)ことがある
 
              例:
                http://twitter.com/statuses/friends_timeline.rss?page=3
@@ -380,6 +543,7 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
         page=ページ番号 (オプション)
           (1ページを20件とみなしたときの)ページ番号を指定することで、過去の任意の発言を20件単位で取得する
           なお、この page オプションは、Twitter の負荷が高いとき等、一時的に使えないようにすることがある
+          注意: page 引数を使って遡れるのは最大3200件前の発言(page=160)までである
 
              例:
                http://twitter.com/statuses/users_timeline.rss?page=3
@@ -483,6 +647,123 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
      API制限:  適用対象
 
 
+  retweeted_by_me [まもなく登場]
+     自分が投稿した retweet の一覧を取得する (最大20件)
+
+     URL: http://twitter.com/statuses/retweeted_by_me.format
+       (format は xml, json, atom のうちのいずれかを指定)
+
+        since_id=ステータスID  (オプション)
+          指定したステータスIDより大きな値のIDの retweet を取得する (指定したIDは取得対象外)
+
+             例:
+               http://twitter.com/statuses/retweeted_by_me.xml?since_id=12345
+                 ステータスID 12345 以降の retweet を XML 形式で取得する
+
+        max_id=ステータスID  (オプション)
+          指定したステータスID以下の値のIDの retweet を取得する (指定したIDも取得対象内)
+
+             例:
+               http://twitter.com/statuses/retweeted_by_me.xml?max_id=54321
+                 ステータスID 54321 以前の retweet を XML 形式で取得する
+
+        page=ページ番号 (オプション)
+          (1ページを20件とみなしたときの)ページ番号を指定することで、過去の任意の retweet を20件単位で取得する。
+          ただし、サーバ側で設定されている取得可能ページ数上限(サーバの運用状況次第で設定値は変わる)を超えての取得はできない
+
+             例:
+               http://twitter.com/statuses/retweeted_by_me.xml?page=3
+                 API実行時点で41件目から60件目に相当する retweet を XML 形式で取得する
+
+        count=件数  (オプション)
+          指定した件数分、retweet を取得する。ただし、200 より大きな値は指定できない 
+
+             例:
+               http://twitter.com/statuses/retweeted_by_me.xml?count=5
+                 最新の retweet を5件、XML 形式で取得する
+
+     メソッド: GET
+     API制限:  適用対象
+
+
+  retweeted_to_me [まもなく登場]
+     自分の friends が投稿した retweet の一覧を取得する (最大20件)
+
+     URL: http://twitter.com/statuses/retweeted_to_me.format
+       (format は xml, json, atom のうちのいずれかを指定)
+
+        since_id=ステータスID  (オプション)
+          指定したステータスIDより大きな値のIDの retweet を取得する (指定したIDは取得対象外)
+
+             例:
+               http://twitter.com/statuses/retweeted_to_me.xml?since_id=12345
+                 ステータスID 12345 以降の retweet を XML 形式で取得する
+
+        max_id=ステータスID  (オプション)
+          指定したステータスID以下の値のIDの retweet を取得する (指定したIDも取得対象内)
+
+             例:
+               http://twitter.com/statuses/retweeted_to_me.xml?max_id=54321
+                 ステータスID 54321 以前の retweet を XML 形式で取得する
+
+        page=ページ番号 (オプション)
+          (1ページを20件とみなしたときの)ページ番号を指定することで、過去の任意の retweet を20件単位で取得する。
+          ただし、サーバ側で設定されている取得可能ページ数上限(サーバの運用状況次第で設定値は変わる)を超えての取得はできない
+
+             例:
+               http://twitter.com/statuses/retweeted_to_me.xml?page=3
+                 API実行時点で41件目から60件目に相当する retweet を XML 形式で取得する
+
+        count=件数  (オプション)
+          指定した件数分、retweet を取得する。ただし、200 より大きな値は指定できない 
+
+             例:
+               http://twitter.com/statuses/retweeted_to_me.xml?count=5
+                 最新の retweet を5件、XML 形式で取得する
+
+     メソッド: GET
+     API制限:  適用対象
+
+
+  retweeted_of_me [まもなく登場]
+     自分が投稿した発言のうち(自分以外の)誰かによって retweet されたものの一覧を取得する (最大20件)
+
+     URL: http://twitter.com/statuses/retweeted_of_me.format
+       (format は xml, json, atom のうちのいずれかを指定)
+
+        since_id=ステータスID  (オプション)
+          指定したステータスIDより大きな値のIDの retweet を取得する (指定したIDは取得対象外)
+
+             例:
+               http://twitter.com/statuses/retweeted_of_me.xml?since_id=12345
+                 ステータスID 12345 以降の retweet を XML 形式で取得する
+
+        max_id=ステータスID  (オプション)
+          指定したステータスID以下の値のIDの retweet を取得する (指定したIDも取得対象内)
+
+             例:
+               http://twitter.com/statuses/retweeted_of_me.xml?max_id=54321
+                 ステータスID 54321 以前の retweet を XML 形式で取得する
+
+        page=ページ番号 (オプション)
+          (1ページを20件とみなしたときの)ページ番号を指定することで、過去の任意の retweet を20件単位で取得する。
+          ただし、サーバ側で設定されている取得可能ページ数上限(サーバの運用状況次第で設定値は変わる)を超えての取得はできない
+
+             例:
+               http://twitter.com/statuses/retweeted_of_me.xml?page=3
+                 API実行時点で41件目から60件目に相当する retweet を XML 形式で取得する
+
+        count=件数  (オプション)
+          指定した件数分、retweet を取得する。ただし、200 より大きな値は指定できない 
+
+             例:
+               http://twitter.com/statuses/retweeted_of_me.xml?count=5
+                 最新の retweet を5件、XML 形式で取得する
+
+     メソッド: GET
+     API制限:  適用対象
+
+
 ステータス関連のAPI
   show
      指定した ID のステータス(1件)を取得する
@@ -522,6 +803,16 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
            存在しない、あるいはアクセス制限のかかっているステータスIDを指定した場合は無視される。
            「@ユーザ名」が含まれない、あるいは@ユーザ名」で指定したユーザが存在しない場合、本引数は無視される。
 
+        lat=緯度 (オプション) [将来、指定可能になる予定]
+           投稿しようとしている発言に関する位置情報のうち、「緯度」を指定する
+           -90.0 から +90.0 の範囲の値を指定する (正の値の場合「北緯」、負の値の場合「南緯」)
+           範囲外の値を指定した場合、geo_enabled が disabled に設定されている場合、あるいはlong引数が指定されていない場合、本引数は無視される
+
+        long=経度 (オプション) [将来、指定可能になる予定]
+           投稿しようとしている発言に関する位置情報のうち、「経度」を指定する
+           -180.0 から +180.0 の範囲の値を指定する (正の値の場合「東経」、負の値の場合「西経」)
+           範囲外の値を指定した場合、geo_enabled が disabled に設定されている場合、あるいはlat引数が指定されていない場合、本引数は無視される
+
         source=クライアント名 (オプション)
           ステータスの投稿に使用しているクライアント名を指定する。
           「クライアント名」をOAuth アプリケーション登録用のWebフォームから申請することで、本オプションを指定しての投稿時、Twitter の Webページ上に“from クライアント名”付きで発言が掲載されるようになる。
@@ -538,7 +829,8 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
                上限に到達すると、それ以降は 403 エラーが返るようになる
 
      注記: Twitter では同一内容のステータスを連続して投稿しようとした場合、最初の投稿以外は無視するようにしている。
-           同一内容のステータスを投稿しようとした場合、その応答として status 要素に最初のステータス投稿時のステータスIDが格納されたものが返る
+           同一内容のステータスを投稿しようとした場合、その応答として status 要素に最初のステータス投稿時のステータスIDが格納されたものが返る。
+           (当分の間) 位置情報は、投稿から7日経過した時点で削除される。
 
      訳者による注記:
         2007年4月はじめごろまでは GET でも構わなかった。現在は、GET は使えなくなっている
@@ -563,6 +855,32 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
 
      メソッド: POST または DELETE
      API制限:  適用対象外
+
+
+  retweet [まもなく登場]
+     指定したステータスを retweet する。ステータスIDの指定は必須。
+     retweet が成功した場合は、format で指定した形式で応答(retweet 元のステータスと、retweet 結果)が返る
+
+     URL: http://twitter.com/statuses/retweet/id.format
+       (format は xml, json のうちのいずれかを指定)
+
+     引数:
+        id=ステータスID  (必須)
+           retweet したいステータスのIDを指定する
+
+          例:
+            http://twitter.com/statuses/retweet/123.xml
+                ステータスID 123 のステータスを retweet し、実行結果を XML 形式で受け取る
+
+     メソッド: POST または PUT
+     API制限:  適用対象外
+               ただし、一定時間辺りの実行回数上限が設定されている
+                 1日辺り  1000回まで (API による実行以外に、Web での投稿、モバイルでの投稿、SMSでの投稿もカウント対象)
+                 1時間辺り 100回まで (API の実行のみカウント対象。タイムラインの取得等、他のAPIの実行回数も含む)
+               上限に到達すると、それ以降は 403 エラーが返るようになる
+
+     注記: Twitter では同一内容の retweet を連続して投稿しようとした場合、最初の投稿以外は無視するようにしている。
+           また、自分の発言を自分で retweet しようとした場合も、無視するようにしている。
 
 
 ユーザ情報関連のAPI
@@ -757,16 +1075,38 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
           <profile_link_color>プロフィールのリンクの色</profile_link_color>
           <profile_sidebar_fill_color>サイドバーの背景の色</profile_sidebar_fill_color>
           <profile_sidebar_border_color>サイドバーの border の色</profile_sidebar_border_color>
+          <profile_background_image_url>背景の画像のURL</profile_background_image_url>
+          <profile_background_tile>背景の画像をタイリングするか否か</profile_background_tile>
           <friends_count>friend の数</friends_count>
           <followers_count>follower の数</followers_count>
           <favourites_count>favourite の数</favourites_count>
+          <created_at>Twitter入会日時</created_at>
+          <utc_offset>UTCとの差(単位は秒)</utc_offset>
+          <time_zone>タイムゾーン</time_zone>
           <statuses_count>ステータス数</statuses_count>
+          <notifications>IMを使っているか否か</notifications>
+          <following>following中か否か</following>
+          <verified>verify済みユーザ否か</verified>
           <status>
             <created_at>ステータス更新日時</created_at>
             <id>ステータスID</id>
             <text>ステータス</text>
+            <source>投稿にしようしたアプリケーション名</source>
+            <truncated>ステータスが(140文字を超えているため)省略されているかどうか</truncated>
+            <in_reply_to_status_id></in_reply_to_status_id>
+            <in_reply_to_user_id></in_reply_to_user_id>
+            <favorited>false</favorited>
+            <in_reply_to_screen_name></in_reply_to_screen_name>
           </status>
         </user>
+
+          注意: 上記のうち
+                   <notifications>
+                   <following>
+                の2つは廃止予定。これらの情報が必要な場合は
+                   friendships/show
+                   friendships/exists 
+                の各APIを使用すること
 
 
 ダイレクトメッセージ関連のAPI
@@ -1171,6 +1511,7 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
 
      メソッド: GET
      API制限:  適用対象外
+               ただし、ブルートフォース攻撃対策として、同一ユーザに対する認証要求は60分間に15回までしか実行できないようにしている
 
     応答:
        認証成功時、以下のような応答が返る
@@ -1800,14 +2141,38 @@ OAuth関連
        (format は json, atom のうちのいずれかを指定)
 
      引数:
-        q=検索条件 (必須)
-           検索条件(検索したいキーワード等)を指定する。URLエンコードすること。URKエンコードされた状態で140文字以内におさめること。
+        q=検索条件 または phrase=検索語句&検索条件 (必須)
+           検索条件(検索したいキーワード等)を指定する。キーワード等はURLエンコードすること。URLエンコードされた状態で140文字以内におさめること。
            「検索条件」は、http://search.twitter.com/advanced の form で使っているのと同じものが使用可能
             (ただし、今のところ、API では near は使えない。until は、将来廃止予定)
 
           例:
             http://search.twitter.com/search.json?q=twitter 
                 twitter という文字列が含まれる「発言」を検索し、結果を JSON 形式で返す
+
+            http://search.twitter.com/search.atom?q=from%3Aal3x
+                ユーザ名 al3x の投稿した「発言」を検索する
+
+            http://search.twitter.com/search.atom?q=to%3Amzsanford
+                ユーザ名 mzsanford への「返信」を検索する (@mzsanford で始まる「発言」を検索する)
+
+            http://search.twitter.com/search.atom?q=%40biz
+                ユーザ名 biz への「言及」を検索する (@biz が含まれる「発言」を検索する)
+
+            http://search.twitter.com/search.atom?q=%23haiku
+                ハッシュタグ haiku (#haiku) が含まれる「発言」を検索する
+
+            http://search.twitter.com/search.atom?phrase=happy+hour&until=2009-03-24
+                happy hour という語句が含まれる「発言」のうち、2009年3月24日以前に投稿されたものを検索する
+
+            http://search.twitter.com/search.atom?q=landing+source:tweetie
+                landing という語が含まれる「発言」のうち、tweetie という名前のアプリケーションで投稿されたものを検索する
+
+            http://search.twitter.com/search.atom?q=%40twitterapi+OR+%40twitter
+                ユーザ名 twitterapi とユーザ名 twitter の少なくともどちらか一方に「言及」している「発言」を検索する
+
+            http://search.twitter.com/search.atom?q=dougw+-from%3Adougw
+                dougw を含む「発言」のうち、ユーザ名 dougw による「発言」を除外して検索する
 
         callback (オプション)
            コールバック関数名を指定する
@@ -1904,6 +2269,7 @@ OAuth関連
      注記: 
       「検索関連のAPI」の「ユーザID(from_user_id および to_user_id)」とそれ以外のAPIの「ユーザID」は別のものである (詳細は http://code.google.com/p/twitter-api/issues/detail?id=214 を参照)。
       「検索関連のAPI」の「ユーザID」は Twitter 上の実際の「ユーザID」とは違う。本APIを利用するアプリケーションで実際の「ユーザID」が必要な場合は、「スクリーン名(from_user および to_user)を元に、users/show API を使って「スクリーン名」と実際の「ユーザID」の対応関係を取得するようにして欲しい
+      「検索関連のAPI」を使用するアプリケーションは http リクエストヘッダで User Agent を明示すること。User Agent が明示されていない場合、通常より厳しい API 制限を行なうことがある。
 
 
   trends
@@ -2396,6 +2762,14 @@ OAuth関連
 
 
 変更履歴
+  2009年 8月21日 第二十九版 (2009年8月21日版原本がベース)
+     (1) 「検索関連のAPI」の search に“phrase 引数”を追加。「例」をいくつか追加。「注記」に追記。
+     (2) 「アカウント関連のAPI」の verify_credentials の「API制限」の項に追記 (ブルートフォース攻撃対策)
+     (3) 「タイムライン関連のAPI」の user_timeline の“page 引数”に「注意」を追加
+     (4) 「タイムライン関連のAPI」に home_timeline, retweeted_by_me, retweeted_to_me, retweeted_of_me を追加
+     (5) 「ステータス関連のAPI」の update に“lat 引数”と“long 引数”を追加
+     (6) 「ステータス関連のAPI」に retweet を追加
+     (7) 「ユーザ情報関連のAPI」の show の「応答」を更新、「注意」を追加
   2009年 7月 2日 第二十八版 (2009年7月2日版原本がベース)
      (1) 「API の実行回数制限」を変更 (1時間に100回から1時間に150回になった)
      (2) 「ステータス関連のAPI」の update の“source 引数”の説明に「参考」を追加
