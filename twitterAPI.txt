@@ -486,7 +486,7 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
 
   user_timeline
      自分の過去24時間以内に update されたステータスから最大20件(count引数使用時は最大200件)を取得する。
-     引数 id を指定すれば、その id のユーザのステータスを取得できる
+     id, user_id, screen_name のいずれかの引数を指定すれば、そのユーザのステータスを取得できる
 
      URL: http://twitter.com/statuses/user_timeline.format
           http://twitter.com/statuses/user_timeline/id.format
@@ -494,7 +494,8 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
 
      引数:
         id=ユーザID または id=スクリーン名  (オプション)
-           指定した ID またはスクリーン名のユーザのステータスを取得する (この引数を指定しない場合は、自分のステータスを取得する)
+           指定した ID またはスクリーン名のユーザのステータスを取得する
+           (id, user_id, screen_name のいずれの引数をも指定しない場合は、自分のステータスを取得する)
 
              例:
                http://twitter.com/statuses/user_timeline/12345.xml
@@ -922,7 +923,7 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
 
   friends
      自分の friend の一覧を(各 friend の最新ステータス付きで)取得する
-     引数 id を指定すれば、その id のユーザの friend の一覧を取得できる
+     id, user_id, screen_name のいずれかの引数を指定すれば、そのユーザの friend の一覧を取得できる
      ただし、この API で取得できるデータは最大100件(100人分)である
 
      URL: http://twitter.com/statuses/friends.format
@@ -930,7 +931,8 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
 
      引数:
         id=ユーザID または id=スクリーン名  (オプション)
-           指定した ID またはスクリーン名のユーザの friend のステータスを取得する (この引数を指定しない場合は、自分の friend のステータスを取得する)
+           指定した ID またはスクリーン名のユーザの friend のステータスを取得する
+           (id, user_id, screen_name のいずれの引数をも指定しない場合は、自分の friend のステータスを取得する)
 
            例:
              http://twitter.com/statuses/friends/12345.json
@@ -997,7 +999,8 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
 
      引数:
         id=ユーザID または id=スクリーン名  (オプション)
-           指定した ID またはスクリーン名のユーザの follower のステータスを取得する (この引数を指定しない場合は、自分の follower のステータスを取得する)
+           指定した ID またはスクリーン名のユーザの follower のステータスを取得する
+           (id, user_id, screen_name のいずれの引数をも指定しない場合は、自分の follower のステータスを取得する)
 
            例:
              http://twitter.com/statuses/followers/12345.json
@@ -1062,11 +1065,13 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
      指定ユーザに関する詳細な情報を取得する。
      ただし、指定ユーザが自分の friend でない場合、この API の実行は失敗する("You are not authorized to see this user." という応答が返る)。
 
+     id, user_id, screen_name のいずれかの引数を必ず指定すること
+
      URL: http://twitter.com/users/show/id.format
        (format は xml, json のうちのいずれかを指定)
 
      引数:
-        id=ユーザID または id=スクリーン名  (必須)
+        id=ユーザID または id=スクリーン名  (オプション)
           情報取得対象となるユーザを指定する
 
           例:
@@ -1319,12 +1324,13 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
 
   create
      指定ユーザを自分の friend (following) にする
+     id, user_id, screen_name のいずれかの引数を必ず指定すること
 
      URL: http://twitter.com/friendships/create/id.format
        (format は xml, json のうちのいずれかを指定)
 
      引数:
-        id=ユーザID または id=スクリーン名  (必須)
+        id=ユーザID または id=スクリーン名  (オプション)
            friend にしたいユーザを指定する
 
           例:
@@ -1365,12 +1371,13 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
 
   destroy
      指定ユーザを自分の friend (following) から外す
+     id, user_id, screen_name のいずれかの引数を必ず指定すること
 
      URL: http://twitter.com/friendships/destroy/id.format
        (format は xml, json のうちのいずれかを指定)
 
      引数:
-        id=ユーザID または id=スクリーン名  (必須)
+        id=ユーザID または id=スクリーン名  (オプション)
            friend から外したいユーザを指定する
 
           例:
@@ -1458,7 +1465,8 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
 
      引数:
         id=ユーザID または id=スクリーン名  (オプション)
-           指定した ID またはスクリーン名のユーザが follow しているユーザのID一覧を取得する (この引数を指定しない場合は、自分が follow しているユーザのID一覧を取得する)
+           指定した ID またはスクリーン名のユーザが follow しているユーザのID一覧を取得する
+           (id, user_id, screen_name のいずれの引数をも指定しない場合は、自分が follow しているユーザのID一覧を取得する)
 
            例:
              http://twitter.com/friends/ids/bob.xml
@@ -1500,7 +1508,8 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
 
      引数:
         id=ユーザID または id=スクリーン名  (オプション)
-           指定した ID またはスクリーン名のユーザを follow しているユーザのID一覧を取得する (この引数を指定しない場合は、自分を follow しているユーザのID一覧を取得する)
+           指定した ID またはスクリーン名のユーザを follow しているユーザのID一覧を取得する
+           (id, user_id, screen_name のいずれの引数をも指定しない場合は、自分を follow しているユーザのID一覧を取得する)
 
            例:
              http://twitter.com/followers/ids/bob.xml
@@ -1816,12 +1825,13 @@ IM関連のAPI
 
   follow
      指定ユーザ(following)の発言を IM に送信するようにする
+     id, user_id, screen_name のいずれかの引数を必ず指定すること
 
      URL: http://twitter.com/notifications/follow/id.format
        (formats は xml, json のうちのいずれかを指定)
 
      引数:
-        id=ユーザID(またはスクリーン名) (必須)
+        id=ユーザID(またはスクリーン名) (オプション)
            発言を IM に送信したいユーザの ID またはスクリーン名を指定する
 
           例:
@@ -1853,12 +1863,13 @@ IM関連のAPI
 
   leave
      指定ユーザ(following)の発言を IM に送信するのをやめる
+     id, user_id, screen_name のいずれかの引数を必ず指定すること
 
      URL: http://twitter.com/notifications/leave/id.format
        (formats は xml, json のうちのいずれかを指定)
 
      引数:
-        id=ユーザID(またはスクリーン名) (必須)
+        id=ユーザID(またはスクリーン名) (オプション)
            発言を IM に送信するのをやめたいユーザの ID またはスクリーン名を指定する
 
           例:
@@ -1892,8 +1903,7 @@ IM関連のAPI
 
   create
      指定ユーザをブロックする。指定ユーザが friend だった場合、friend から外した上でブロックする
-
-     引数はすべてオプションであるが、少なくとも1つは指定する必要がある
+     id, user_id, screen_name のいずれかの引数を必ず指定すること
 
      URL: http://twitter.com/blocks/create/id.format
        (format は xml, json のうちのいずれかを指定)
@@ -1929,8 +1939,7 @@ IM関連のAPI
 
   destroy
      指定ユーザのブロックを解除する
-
-     引数はすべてオプションであるが、少なくとも1つは指定する必要がある
+     id, user_id, screen_name のいずれかの引数を必ず指定すること
 
      URL: http://twitter.com/blocks/destroy/id.format
        (format は xml, json のうちのいずれかを指定)
@@ -1969,7 +1978,7 @@ IM関連のAPI
      ブロックをしていない場合、あるいは当該ユーザアカウントが存在しない場合は 404 Not Found が返る。
      ブロックをしている場合は、当該ユーザの情報(http://twitter.com/users/show/id.format で返ってくる情報と同じ形式)が返る。
 
-     引数はすべてオプションであるが、少なくとも1つは指定する必要がある
+     id, user_id, screen_name のいずれかの引数を必ず指定すること
 
      URL: http://twitter.com/blocks/exists/id.format
        (format は xml, json のうちのいずれかを指定)
@@ -2064,15 +2073,14 @@ IM関連のAPI
 spam 報告関連のAPI
   report_spam
      指定ユーザをスパマーであると報告し、ブロックする
-
-     引数はすべてオプションであるが、少なくとも1つは指定する必要がある
+     id, user_id, screen_name のいずれかの引数を必ず指定すること
 
      URL: http://twitter.com/report_spam.format
        (format は xml, json のうちのいずれかを指定)
 
      引数:
-        id=ユーザID または id=スクリーン名  (必須)
-           ブロックしたいユーザを指定する
+        id=ユーザID または id=スクリーン名  (オプション)
+           スパマーとして報告したいユーザを指定する
 
           例:
             http://twitter.com/report_spam.json?id=82228249
@@ -2917,6 +2925,8 @@ OAuth関連
 
 
 変更履歴
+  2009年10月16日 第三十三版 (2009年10月15日版原本がベース)
+     id, user_id, screen_name の3つの引数が存在する API について、各オプションの説明を修正、統一できるところは統一した
   2009年10月16日 第三十二版 (2009年10月15日版原本がベース)
      (1) 「ステータス関連のAPI」に retweets を追加 (注意: retweet とは別の API)
      (2) 「spam 報告関連のAPI」の項目を新設し、report_spam を追加
