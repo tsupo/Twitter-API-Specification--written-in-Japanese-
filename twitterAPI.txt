@@ -1,7 +1,7 @@
 ﻿Twitter API 仕様書
   日本語訳: tsupo (http://watcher.moe-nifty.com/  mailto:tsupo@na.rim.or.jp)
 
-  http://apiwiki.twitter.com/Twitter-API-Documentation の2009年8月24日版の大雑把な日本語訳
+  http://apiwiki.twitter.com/Twitter-API-Documentation の2009年10月15日版の大雑把な日本語訳
   (ただし、そのまま翻訳したわけではなく、一部、意訳。また、現時点の実装状況に合わせて、内容を修正している)
 
 
@@ -22,6 +22,7 @@
      statuses/update
      statuses/destroy
      statuses/retweet         [まもなく登場]
+     statuses/retweets        [まもなく登場]
 
   ユーザ情報関連のAPI:
      statuses/friends
@@ -77,6 +78,9 @@
      help/test
      help/downtime_schedule
 
+  spam 報告関連のAPI
+     report_spam
+
   OAuth関連:
      oauth/request_token
      oauth/authorize
@@ -99,11 +103,11 @@
   ストリーミングAPI:
      firehose
      gardenhose
-     spritzer
+     sample
      birddog
      shadow
-     follow
-     track
+     filter
+     retweet
 
 
 認証
@@ -406,6 +410,10 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
            ... (略) ...
         </statuses> 
 
+     訳者による注記:
+        2009年9月下旬(24日ごろ?)から home_timeline の取得ができる(not found エラーにならない)ようになった。
+        ただし、取得内容は、今のところ、friends_timeline と完全に同一である(retweet 関連 API の正式公開時までは friends_timeline と同一内容のままだと思われる)。
+
 
   friends_timeline
      自分の friend の過去24時間以内に update されたステータスから最大20件(count引数使用時は最大200件)を取得する。
@@ -472,6 +480,8 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
      訳者による注記:
         Twitter に login 中であれば、BASIC 認証なしで GET できる(ただし、protected なユーザの発言は取得できない)
         since を指定しても無視されるようになった。仕様書原本からも since に関する説明が削除されている
+
+        id 引数は、すでに仕様書原本から削除されているが、現在も機能している (他人のfriends_timeline を取得する場合は、Twitter に login 中でも、BASIC 認証必要)
 
 
   user_timeline
@@ -881,6 +891,31 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
 
      注記: Twitter では同一内容の retweet を連続して投稿しようとした場合、最初の投稿以外は無視するようにしている。
            また、自分の発言を自分で retweet しようとした場合も、無視するようにしている。
+
+
+  retweets [まもなく登場]
+     指定したステータスを retweet しているユーザの一覧のうち最初の100人分を取得する
+
+     URL: http://twitter.com/statuses/retweets/id.format
+       (format は xml, json のうちのいずれかを指定)
+
+     引数:
+        id=ステータスID  (必須)
+           retweet しているユーザの一覧を取得したいステータスのIDを指定する
+
+          例:
+            http://twitter.com/statuses/retweets/4012738147.xml
+                ステータスID 4012738147 のステータスを retweet しているユーザの一覧(最大100人分)を XML 形式で受け取る
+
+        count=件数  (オプション)
+          指定した件数分、retweet しているユーザの一覧を取得する。ただし、100 より大きな値は指定できない
+
+          例:
+            http://twitter.com/statuses/retweets/4012738147.xml?count=5
+                ステータスID 4012738147 のステータスを retweet しているユーザの一覧(5人分)を XML 形式で受け取る
+
+     メソッド: GET
+     API制限:  適用対象
 
 
 ユーザ情報関連のAPI
@@ -1502,9 +1537,10 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
 アカウント関連のAPI
 
   verify_credentials
-     セッションを開始する。認証に成功すると HTTP 200 OK の応答とともに cookie が返る
-     (以後、この cookie を使うことで、login 状態を継続したまま、各 API を実行することができるようになる[API の実行のたびに BASIC 認証を行なう必要がなくなる])
-     この API はウィジェットのようなクライアントで簡易ログイン/ログアウトを実現する目的で使うことを想定している
+     (BASIC認証による)セッションを開始する。認証に成功すると HTTP 200 OK の応答とともに当該ユーザに関する情報(と cookie)が返る。
+     認証に失敗するとステータスコード 401 の応答とエラーメッセージが返る。
+
+     この API は認証情報(BASIC認証で使うユーザ名とパスワードの組み合わせ)が有効かどうかを確認するのに利用することができる
 
      URL: http://twitter.com/account/verify_credentials.format
              (format は xml, json のうちのいずれかを指定。もしくは何も指定しない)
@@ -1514,16 +1550,10 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
                ただし、ブルートフォース攻撃対策として、同一ユーザに対する認証要求は60分間に15回までしか実行できないようにしている
 
     応答:
-       認証成功時、以下のような応答が返る
-         format を指定しない場合
-           Authorized
-         xml を指定した場合
-           <authorized>true</authorized>
-         json を指定した場合
-           {"authorized":true}
+       認証成功時、ユーザ情報(http://twitter.com/users/show/id.format で返ってくる情報と同じ形式)が返る
 
      訳者による注記:
-       本 API で使用するユーザ名はメールアドレスでも、スクリーン名でも可。
+       本 API で使用する(BASIC認証で指定する)ユーザ名はメールアドレスでも、スクリーン名でも可。
 
 
   end_session
@@ -1702,8 +1732,6 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
      引数:
         name (オプション)
           名前。最大 40 文字まで
-        email (オプション)
-          メールアドレス。最大 40 文字まで。有効なメールアドレスを指定すること
         url (オプション)
           Webページ。最大 100 文字まで。頭の “http://” 部分は省略可能
         location (オプション)
@@ -1865,11 +1893,13 @@ IM関連のAPI
   create
      指定ユーザをブロックする。指定ユーザが friend だった場合、friend から外した上でブロックする
 
+     引数はすべてオプションであるが、少なくとも1つは指定する必要がある
+
      URL: http://twitter.com/blocks/create/id.format
        (format は xml, json のうちのいずれかを指定)
 
      引数:
-        id=ユーザID または id=スクリーン名  (必須)
+        id=ユーザID または id=スクリーン名  (オプション)
            ブロックしたいユーザを指定する
 
           例:
@@ -1878,6 +1908,21 @@ IM関連のAPI
             http://twitter.com/blocks/create/bob.xml
                 スクリーン名 bob の人をブロックするリクエストを発行し、実行結果を XML 形式で取得する
 
+        user_id=ユーザID  (オプション)
+           指定した ID のユーザをブロックしているかどうかを調べる
+
+           例:
+             http://twitter.com/blocks/create.xml?user_id=1401881
+                 ユーザID 1401881 をブロックする
+
+        screen_name=スクリーン名  (オプション)
+           指定したスクリーン名のユーザをブロックする
+
+          例:
+            http://twitter.com/blocks/create.xml?screen_name=101010
+                 スクリーン名 101010 をブロックする
+                 (この場合、101010 はユーザIDではなく、スクリーン名であることに注意)
+
      メソッド: POST
      API制限:  適用対象外
 
@@ -1885,11 +1930,13 @@ IM関連のAPI
   destroy
      指定ユーザのブロックを解除する
 
+     引数はすべてオプションであるが、少なくとも1つは指定する必要がある
+
      URL: http://twitter.com/blocks/destroy/id.format
        (format は xml, json のうちのいずれかを指定)
 
      引数:
-        id=ユーザID または id=スクリーン名  (必須)
+        id=ユーザID または id=スクリーン名  (オプション)
            ブロック解除したいユーザを指定する
 
           例:
@@ -1897,6 +1944,21 @@ IM関連のAPI
                 ユーザID 12345 の人のブロックを解除するリクエストを発行し、実行結果を JSON 形式で取得する
             http://twitter.com/blocks/destroy/bob.xml
                 スクリーン名 bob の人のブロックを解除するリクエストを発行し、実行結果を XML 形式で取得する
+
+        user_id=ユーザID  (オプション)
+           指定した ID のユーザをブロックしているかどうかを調べる
+
+           例:
+             http://twitter.com/blocks/destroy.xml?user_id=1401881
+                 ユーザID 1401881 をブロックする
+
+        screen_name=スクリーン名  (オプション)
+           指定したスクリーン名のユーザのブロックを解除する
+
+          例:
+            http://twitter.com/blocks/destroy.xml?screen_name=101010
+                 スクリーン名 101010 のブロックを解除する
+                 (この場合、101010 はユーザIDではなく、スクリーン名であることに注意)
 
      メソッド: POST または DELETE
      API制限:  適用対象外
@@ -1997,6 +2059,41 @@ IM関連のAPI
 
      訳者による注記:
         2009年1月21日現在、この API は使えなくなっている (API仕様書原本からも削除されている)
+
+
+spam 報告関連のAPI
+  report_spam
+     指定ユーザをスパマーであると報告し、ブロックする
+
+     引数はすべてオプションであるが、少なくとも1つは指定する必要がある
+
+     URL: http://twitter.com/report_spam.format
+       (format は xml, json のうちのいずれかを指定)
+
+     引数:
+        id=ユーザID または id=スクリーン名  (必須)
+           ブロックしたいユーザを指定する
+
+          例:
+            http://twitter.com/report_spam.json?id=82228249
+                ユーザID 82228249 の人をスパマーとして報告してブロックするリクエストを発行し、実行結果を JSON 形式で取得する
+
+        user_id=ユーザID  (オプション)
+           指定した ID のユーザをスパマーとして報告し、ブロックする
+
+           例:
+             http://twitter.com/report_spam.xml?user_id=82228249
+                 ユーザID 82228249 をスパマーとして報告し、ブロックする
+
+        screen_name=スクリーン名  (オプション)
+           指定したスクリーン名のユーザをスパマーとして報告し、ブロックする
+
+          例:
+            http://twitter.com/report_spam.xml?screen_name=examplespammer
+                 スクリーン名 examplespammer をスパマーとして報告し、ブロックする
+
+     メソッド: POST
+     API制限:  適用対象 (1時間辺りの報告数の上限は固定)
 
 
 OAuth関連
@@ -2470,8 +2567,8 @@ OAuth関連
         BASIC認証
 
     ・アクセス制限および実行回数制限
-        spritzer, follow, track: 制限なし
-        firehose, gardenhose, birddog, shadow: 許可されたユーザのみ実行可能
+        sample(spritzer), filter(follow, track): 制限なし
+        firehose, gardenhose, birddog, shadow, retweet: 許可されたユーザのみ実行可能
         不正な認証情報でのアクセスを繰り返すと、当該IPアドレスからのアクセスを自動的かつ一時的に排除する
 
     ・ストリームへの接続方法
@@ -2533,7 +2630,9 @@ OAuth関連
     public な情報を全て取得する。 (REST API の statuses/public_timeline の「応答」中の status 要素に相当するものがストリームとして流れてくる)
     この API を使いたい人は、Twitter 関係者にコンタクトを取って欲しい。この API は特定の団体にのみ、契約を結んだ上で使用を許可している
 
-     URL: http://stream.twitter.com/firehose.format
+     URL: http://stream.twitter.com/1/statuses/firehose.format
+       または
+          http://stream.twitter.com/firehose.format
        (format は xml, json のうちのいずれかを指定)
 
      引数:
@@ -2567,10 +2666,12 @@ OAuth関連
      制限: 許可されたユーザのみ実行可能
 
 
-  spritzer
-    public な情報のうち、ある一定割合のものを取得する (要するに、全てのデータが得られる保証はない。データ抜けがある可能性がある)
+  sample (以前 spritzer と呼ばれていたもの)
+    public な情報のうち、ある一定割合のものを取得する (gardenhose の精度の悪いバージョン。要するに、全てのデータが得られる保証はない。データ抜けがある可能性がある)
 
-     URL: http://stream.twitter.com/spritzer.format
+     URL: http://stream.twitter.com/1/statuses/sample.format
+       または
+          http://stream.twitter.com/spritzer.format
        (format は xml, json のうちのいずれかを指定)
 
      引数:
@@ -2642,47 +2743,50 @@ OAuth関連
      制限: 許可されたユーザのみ実行可能
 
 
-  follow
-    ID で指定したユーザの public な情報を取得する  (private 設定しているユーザの情報は取得できない) [birddog の規模縮小・簡易版]
-    この API を使うことで、最大 200 ユーザの発言を追いかけることができる
+  filter (以前 follow と呼ばれていたものと track と呼ばれていたものを統合)
+    1件以上のフィルターを設定し、絞り込んだ情報(public な情報に限定)を取得する (birddog, shadow の精度の悪い版)
 
-     URL: http://stream.twitter.com/follow.format
+     URL: http://stream.twitter.com/1/statuses/filter.format (引数 follow と track を同時に指定する場合は、必ず、この形式の URL を使用する)
+       または
+          http://stream.twitter.com/follow.format (引数 follow のみを指定する場合は、この形式の URL が引き続き使える)
+          http://stream.twitter.com/track.format  (引数 track のみを指定する場合は、この形式の URL が引き続き使える)
        (format は xml, json のうちのいずれかを指定)
 
      引数:
-        follow
+        follow=ユーザIDのリスト
+          ID で指定したユーザの public な情報を取得する  (private 設定しているユーザの情報は取得できない) [birddog の規模縮小・簡易版]
+          この API を使うことで、最大 400 ユーザの発言を追いかけることができる
+
           追跡対象のユーザの ID をスペース(空白文字)区切りで指定する
 
              例:
                http://stream.twitter.com/follow.json に対して、以下のような内容の application/x-www-form-urlencoded 形式のデータを POST する
                   follow=12 13 15 16 20 87
 
-     メソッド: POST
-     制限: なし (誰でも実行可能)
+          なお、
+             ・mention
+             ・in_reply_to を指定せずに投稿された reply
+             ・retweet API を使わずに投稿された retweet
+          は追跡対象外となる
 
+        track=キーワードのリスト
+          指定したキーワードを含む public な情報を取得する
+          この API を使うことで、最大 200 キーワードを追いかけることができる
+          [最大 10000 キーワードを追いかけ可能な "restricted track" 契約、最大 200000 キーワードを追いかけ可能な "partner track" 契約も用意されている]
+          (キーワードの大文字、小文字は区別しない。複数のキーワードを指定した場合は、指定したキーワードがどれか1つでも含まれていれば、取得対象になる)
 
-  track
-    指定したキーワードを含む public な情報を取得する
-    この API を使うことで、最大 50 キーワードを追いかけることができる
-    (キーワードの大文字、小文字は区別しない。複数のキーワードを指定した場合は、指定したキーワードがどれか1つでも含まれていれば、取得対象になる)
+              例えば、キーワードに twitter を指定した場合、前後が空白文字で区切られた
+                 TWITTER
+                 twitter
+                 "Twitter"
+                 twitter.
+                 #twitter
+                 @twitter
+              といった「語(token)」を含む発言を取得することができる。ただし、
+                 TwitterTracker
+                 http://www.twitter.com
+              のようにキーワードの前後に別の文字が存在する「語」に関しては、取得対象(キーワードマッチング対象)にはならない
 
-        例えば、キーワードに twitter を指定した場合、前後が空白文字で区切られた
-           TWITTER
-           twitter
-           "Twitter"
-           twitter.
-           #twitter
-           @twitter
-        といった「語(token)」を含む発言を取得することができる。ただし、
-           TwitterTracker
-           http://www.twitter.com
-        のようにキーワードの前後に別の文字が存在する「語」に関しては、取得対象(キーワードマッチング対象)にはならない
-
-     URL: http://stream.twitter.com/track.format
-       (format は xml, json のうちのいずれかを指定)
-
-     引数:
-        track
           追跡対象のキーワードをコンマ区切りで指定する。指定するキーワードは1バイト以上30バイト以内とする
           (訳者注: キーワードに指定可能な文字は英数字のみ。記号やマルチバイト文字には未対応)
 
@@ -2690,8 +2794,33 @@ OAuth関連
                http://stream.twitter.com/track.json に対して、以下のような内容の application/x-www-form-urlencoded 形式のデータを POST する
                   track=basketball,football,baseball,footy,soccer
 
+        count=取得件数
+          新しいストリームに接続するのに先立って取得しておきたい過去情報(バックログ)の件数を指定する。
+          指定できる値は -150000 から 150000 の範囲の整数値。
+          正の値を指定した場合、取得した過去情報に引き続き、現在の情報がストリームとして流れる
+          負の値を指定した場合、前回の接続が切れた時点を基準に、指定された件数分遡って情報を取得する
+
+        delimited=データ長
+          「応答」中の「ステータス」の大きさが常に一定値になるように指定する。「データ長」の単位はバイト。
+          実際の「ステータス」が指定したデータ長に満たない場合、足りない分は改行(\n)で埋められる。ただし、各「ステータス」の間に、keep-alive により挿入される復帰改行が含まれることがあるので、注意すること。
+
      メソッド: POST
-     制限: なし (誰でも実行可能)
+     制限: なし (["restricted track"契約や"partner track"契約が必要なものを除き]誰でも実行可能)
+
+
+  retweet [まもなく登場]
+    retweet されているステータスをすべて取得する (まだ、現時点では retweet ストリームは用意されていないので、本 API は利用不可)
+
+     URL: http://stream.twitter.com/1/statuses/retweet.format
+       (format は xml, json のうちのいずれかを指定)
+
+     引数:
+        delimited=データ長
+          「応答」中の「ステータス」の大きさが常に一定値になるように指定する。「データ長」の単位はバイト。
+          実際の「ステータス」が指定したデータ長に満たない場合、足りない分は改行(\n)で埋められる。ただし、各「ステータス」の間に、keep-alive により挿入される復帰改行が含まれることがあるので、注意すること。
+
+     メソッド: GET
+     制限: 許可されたユーザのみ実行可能 (契約が必要)
 
 
 
@@ -2772,12 +2901,37 @@ OAuth関連
     2009年4月以降に FriendFeed で(Twitter のフィードを取り込むために)使用している API がこの「ストリーミングAPI」であると思われる
 
 
+  retweet 関連 API
+    home_timeline の取得を除き、まだ、どの retweet 関連 API も使えない (実行しようとすると、not found エラーが返ってくる)。
+    現時点では、home_timeline を取得しても、friends_timeline の内容と全く同じものになっている。
+
+
+  geolocation 関連
+    緯度経度情報を引数として指定可能な API に関して、今のところ、緯度経度情報関連の引数を指定しても無視される(だけで、エラーにはならない)
+    緯度経度情報が応答に含まれる API に関して、今のところ、緯度経度情報は含まれていない
+
+
   その他
     2009年4月9日、POST メソッドによるタイムライン取得ができなくなった。
     (それまでは、本来 GET で取得すべきタイムラインが、なぜか POST でも取得できていた)
 
 
 変更履歴
+  2009年10月16日 第三十二版 (2009年10月15日版原本がベース)
+     (1) 「ステータス関連のAPI」に retweets を追加 (注意: retweet とは別の API)
+     (2) 「spam 報告関連のAPI」の項目を新設し、report_spam を追加
+     (3) 「ブロック関連のAPI」の create に“user_id 引数”と“screen_name 引数”を追加。“id 引数”の説明を変更
+     (4) 「ブロック関連のAPI」の destroy に“user_id 引数”と“screen_name 引数”を追加。“id 引数”の説明を変更
+     (5) 「ステータス関連のAPI」の friends_timeline の“訳者による注記”に “id 引数”に関する補足を追記
+     (6) 「ステータス関連のAPI」の home_timeline に“訳者による注記”を追加
+     (7) 「アカウント関連のAPI」の verify_credentials の説明を修正(現在の仕様に合ったものに変更)
+     (8) 「アカウント関連のAPI」の update_profile の“email 引数”を削除
+     (9) 「ストリーミングAPI」の spritzer を sample に名称変更し、説明も変更
+    (10) 「ストリーミングAPI」の follow と track を filter という名称で統合。関連する説明を変更
+    (11) 「ストリーミングAPI」に retweet を追加
+    (12) 上記 (9) ～ (11) に合わせて「ストリーミングAPI」の説明を変更
+    (13) 「備考」に“retweet 関連 API”を追加
+    (14) 「備考」に“geolocation 関連”を追加
   2009年 8月25日 第三十一版 (2009年8月24日版原本がベース)
      (1) 「ストリーミングAPI」の“「応答」の解析”の説明に“ステータス削除通知”と“制限通知”を追加
      (2) 「ストリーミングAPI」の track の“track 引数”の説明を変更 (3バイト以上20バイト以内 → 1バイト以上30バイト以内)
