@@ -1,7 +1,7 @@
 ﻿Twitter API 仕様書
   日本語訳: tsupo (http://watcher.moe-nifty.com/  mailto:tsupo@na.rim.or.jp)
 
-  http://apiwiki.twitter.com/Twitter-API-Documentation の2009年10月15日版の大雑把な日本語訳
+  http://apiwiki.twitter.com/Twitter-API-Documentation の2009年10月27日版の大雑把な日本語訳
   (ただし、そのまま翻訳したわけではなく、一部、意訳。また、現時点の実装状況に合わせて、内容を修正している)
 
 
@@ -107,7 +107,7 @@
      birddog
      shadow
      filter
-     retweet
+     retweet                  [まもなく登場]
 
 
 認証
@@ -982,6 +982,20 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
                http://twitter.com/statuses/friends.xml?since=Tue%2C+27+Mar+2007+22%3A55%3A48+GMT
                  2007年3月27日22時55分48秒GMT以降にステータス が update された friend の一覧を XML 形式で取得する
 
+        cursor=-1 または cursor=カーソル位置  (オプション)
+          指定した(データベースの)カーソル位置以降の friend の一覧を100人分取得する
+          -1 を指定した場合、先頭からの100人分を取得する。
+          応答本体に next_cursor がある場合は、「次のページ」(のカーソル位置)、previous_cursor がある場合は、「前のページ」(のカーソル位置)がそれぞれ存在することを示す。
+          本APIの次回実行時に、この next_cursor や previous_cursor の示すカーソル位置を使用することで、friend の一覧の「次のページ」や「前のページ」相当分(100人分)を取得することができる。
+
+             例:
+               http://twitter.com/statuses/friends/barackobama.xml?cursor=-1
+                 ユーザ名 barackobama の friend の一覧を先頭から100人分取得する
+
+               http://twitter.com/statuses/friends/barackobama.xml?cursor=1300794057949944903
+                 ユーザ名 barackobama の friend の一覧をカーソル位置 1300794057949944903 から100人分取得する
+
+
      メソッド: GET
      API制限:  適用対象
 
@@ -989,6 +1003,7 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
         Twitter に login 中であれば、BASIC 認証なしで GET できる
         2009年1月21日現在、lite オプションは使えなくなっている (廃止された模様)
         since を指定しても無視されるようになった。仕様書原本からも since に関する説明が削除されている
+        2009年9月(24日ごろ?)に cursor 引数が導入されたのに伴い、page 引数も仕様書原本から削除された
 
 
   followers
@@ -1039,12 +1054,26 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
              http://twitter.com/statuses/followers.xml?lite=true
                  自分の follower の一覧を「最新ステータスなし」の XML 形式で取得する
 
+        cursor=-1 または cursor=カーソル位置  (オプション)
+          指定した(データベースの)カーソル位置以降の follower の一覧を100人分取得する
+          -1 を指定した場合、先頭からの100人分を取得する。
+          応答本体に next_cursor がある場合は、「次のページ」(のカーソル位置)、previous_cursor がある場合は、「前のページ」(のカーソル位置)がそれぞれ存在することを示す。
+          本APIの次回実行時に、この next_cursor や previous_cursor の示すカーソル位置を使用することで、follower の一覧の「次のページ」や「前のページ」相当分(100人分)を取得することができる。
+
+             例:
+               http://twitter.com/statuses/followers/barackobama.xml?cursor=-1
+                 ユーザ名 barackobama の follower の一覧を先頭から100人分取得する
+
+               http://twitter.com/statuses/followers/barackobama.xml?cursor=1300794057949944903
+                 ユーザ名 barackobama の follower の一覧をカーソル位置 1300794057949944903 から100人分取得する
+
      メソッド: GET
      API制限:  適用対象
 
      訳者による注記:
         Twitter の運用状況によっては、本 API を使えなくすることがある。もしくは、id 引数が無視されることがある。
         2009年1月21日現在、lite オプションは使えなくなっている (廃止された模様)
+        2009年9月(24日ごろ?)に cursor 引数が導入されたのに伴い、page 引数も仕様書原本から削除された
 
 
   featured
@@ -2694,7 +2723,7 @@ OAuth関連
   birddog
     ID で指定したユーザの public な情報を取得する (private 設定しているユーザの情報は取得できない)
     この API では、「言及」(@ユーザ名 が文中に含まれる「発言」)と明示的な「返信」(@ユーザ名 で始まる「発言」)は取得できない
-    この API を使うことで、最大 200,000 ユーザの発言を追いかけることができる
+    この API を使うことで、最大 400000 ユーザの発言を追いかけることができる
     この API は特定の団体にのみ、契約を結んだ上で使用を許可している
 
      URL: http://stream.twitter.com/birddog.format
@@ -2724,7 +2753,7 @@ OAuth関連
 
   shadow
     ID で指定したユーザの public な情報を取得する  (private 設定しているユーザの情報は取得できない) [birddog の規模縮小版]
-    この API を使うことで、最大 50000 ユーザの発言を追いかけることができる
+    この API を使うことで、最大 80000 ユーザの発言を追いかけることができる
 
      URL: http://stream.twitter.com/shadow.format
        (format は xml, json のうちのいずれかを指定)
@@ -2923,8 +2952,17 @@ OAuth関連
     2009年4月9日、POST メソッドによるタイムライン取得ができなくなった。
     (それまでは、本来 GET で取得すべきタイムラインが、なぜか POST でも取得できていた)
 
+    2009年10月23日、POST系APIにあった実行回数制限のうち『1時間辺り 100回まで (API の実行のみカウント対象。タイムラインの取得等、他のAPIの実行回数も含む)』という制限が廃止された模様
+
 
 変更履歴
+  2009年10月28日 第三十四版 (2009年10月27日版原本がベース)
+     (1) 「ユーザ情報関連のAPI」の friends に“cursor 引数”を追加。“訳者による注記”に追記
+     (2) 「ユーザ情報関連のAPI」の followers に“cursor 引数”を追加。“訳者による注記”に追記
+     (3) 「ストリーミングAPI」の shadow の説明を変更 (最大 50000 ユーザ → 最大 80000 ユーザ)
+     (4) 「ストリーミングAPI」の birddog の説明を変更 (最大 200000 ユーザ → 最大 400000 ユーザ)
+     (5) 「関連リソース」に “Twitter Support :: Update and API Limits”を追加
+     (6) 「備考」の“その他”に追記
   2009年10月16日 第三十三版 (2009年10月15日版原本がベース)
      id, user_id, screen_name の3つの引数が存在する API について、各オプションの説明を修正、統一できるところは統一した
   2009年10月16日 第三十二版 (2009年10月15日版原本がベース)
@@ -3180,6 +3218,8 @@ OAuth関連
      http://apiwiki.twitter.com/Streaming-API-Documentation
   Twitter API Wiki / Rate limiting (API実行回数制限)
      http://apiwiki.twitter.com/Rate-limiting
+  Twitter Support :: Update and API Limits (上記、API実行回数制限の具体的な数字)
+     http://help.twitter.com/forums/10711/entries/15364
   Twitter API Wiki / FAQ
      http://apiwiki.twitter.com/FAQ
   Twitter Development Talk | Google グループ
