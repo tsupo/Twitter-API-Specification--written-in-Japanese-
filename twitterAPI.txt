@@ -1,4 +1,4 @@
-﻿Twitter API 仕様書 <title>Twitter API 仕様書 日本語訳 第三十七版 (2009年11月17日版)</title>
+﻿Twitter API 仕様書 <title>Twitter API 仕様書 日本語訳 第三十八版 (2009年11月18日版)</title>
   日本語訳: tsupo (http://watcher.moe-nifty.com/  mailto:tsupo@na.rim.or.jp)
 
   http://apiwiki.twitter.com/Twitter-API-Documentation の2009年11月17日版の大雑把な日本語訳
@@ -2379,7 +2379,7 @@ list 関連のAPI
 
 
   GET list memberships
-     指定したユーザの作成した list に登録されているメンバーの一覧を取得する
+     指定したユーザが登録されている list の一覧を取得する
 
      URL: http://api.twitter.com/1/user/lists/memberships.format
        (format は xml, json のうちのいずれかを指定)
@@ -2395,17 +2395,17 @@ list 関連のAPI
 
           例:
             http://api.twitter.com/1/twitterapi/lists/memberships.xml?cursor=-1
-                 スクリーン名 twitterapi の作成した list のうち、最初の 20 リストの各登録者一覧を取得する
+                 スクリーン名 twitterapi が登録されている list のうち、最初の20件を取得する
 
             http://api.twitter.com/1/twitterapi/lists/memberships.xml?cursor=-1300794057949944903
-                 スクリーン名 twitterapi の作成した list のうち、カーソル位置 -1300794057949944903 以降の最初の20リストの各登録者一覧を取得する
+                 スクリーン名 twitterapi が登録されている list のうち、カーソル位置 -1300794057949944903 以降の最初の20件を取得する
 
      メソッド: GET
      API制限:  適用対象
 
 
   GET list subscriptions
-     指定したユーザの作成した list を購読している人の一覧を取得する
+     指定したユーザが購読している list の一覧を取得する
 
      URL: http://api.twitter.com/1/user/lists/subscriptions.format
        (format は xml, json のうちのいずれかを指定)
@@ -2421,10 +2421,10 @@ list 関連のAPI
 
           例:
             http://api.twitter.com/1/twitterapi/lists/subscriptions.xml?cursor=-1
-                 スクリーン名 twitterapi の作成した list のうち、最初の 20 リストの各購読者一覧を取得する
+                 スクリーン名 twitterapi が購読している list のうち、最初の20件を取得する
 
             http://api.twitter.com/1/twitterapi/lists/subscriptions.xml?cursor=-1300794057949944903 
-                 スクリーン名 twitterapi の作成した list のうち、カーソル位置 -1300794057949944903 以降の最初の20リストの各購読者一覧を取得する
+                 スクリーン名 twitterapi が購読している list のうち、カーソル位置 -1300794057949944903 以降の最初の20件を取得する
 
      メソッド: GET
      API制限:  適用対象
@@ -3524,6 +3524,8 @@ OAuth関連
 
 
 変更履歴
+  2009年11月18日 第三十八版 (2009年11月17日版原本がベース)
+     (1) 「list 関連のAPI」のうち、GET list memberships と GET list subscriptions の説明を修正
   2009年11月17日 第三十七版 (2009年11月17日版原本がベース)
      (1) 「ユーザ情報関連のAPI」に search を追加
      (2) 「list 関連のAPI」を新設。POST lists (create), POST list id (update), GET lists (index), GET list id (show), DELETE list id (destroy), GET list statuses, GET list memberships, GET list subscriptions を追加
