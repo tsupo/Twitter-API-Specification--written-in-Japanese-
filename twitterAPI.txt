@@ -1,7 +1,7 @@
-﻿Twitter API 仕様書
+﻿Twitter API 仕様書 <title>Twitter API 仕様書 日本語訳 第三十七版 (2009年11月17日版)</title>
   日本語訳: tsupo (http://watcher.moe-nifty.com/  mailto:tsupo@na.rim.or.jp)
 
-  http://apiwiki.twitter.com/Twitter-API-Documentation の2009年10月28日版の大雑把な日本語訳
+  http://apiwiki.twitter.com/Twitter-API-Documentation の2009年11月17日版の大雑把な日本語訳
   (ただし、そのまま翻訳したわけではなく、一部、意訳。また、現時点の実装状況に合わせて、内容を修正している)
 
 
@@ -29,6 +29,7 @@
      statuses/followers
      statuses/featured
      users/show
+     users/search
 
   ダイレクトメッセージ関連のAPI:
      direct_messages
@@ -78,8 +79,30 @@
      help/test
      help/downtime_schedule
 
-  spam 報告関連のAPI
+  spam 報告関連のAPI:
      report_spam
+
+  list 関連のAPI:
+     POST lists       (create)
+     POST list id     (update)
+     GET lists        (index)
+     GET list id      (show)
+     DELETE list id   (destroy)
+     GET list statuses
+     GET list memberships
+     GET list subscriptions
+
+  list の登録内容に関する API:
+     GET list members
+     POST list members
+     DELETE list members
+     GET list members id
+
+  list の購読に関する API:
+     GET list subscribers
+     POST list subscribers
+     DELETE list subscribers
+     GET list subscribers id
 
   OAuth関連:
      oauth/request_token
@@ -93,6 +116,10 @@
      trends/current
      trends/daily
      trends/weekly
+
+  地域情報検索関連のAPI:
+     trends/available         [まもなく登場]
+     trends/location          [まもなく登場]
 
   検索条件保存:
      saved_searches
@@ -1181,6 +1208,53 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
                 の各APIを使用すること
 
 
+  search
+     指定条件に一致する Twitter ユーザを検索する。
+     「友だちを検索」 http://twitter.com/invitations/find_on_twitter の「ついったーで検索」タブの「検索」ボタンを使ったときと同じ結果を返す。
+     本APIで検索可能なのは、検索条件に一致する情報のうち、最初の1000件分までである
+
+     URL: http://api.twitter.com/1/users/search.format
+       または
+          http://twitter.com/users/search.format
+       (format は xml, json のうちのいずれかを指定)
+
+     引数:
+        q=文字列  (必須)
+           探したいユーザの本名、スクリーン名、などを指定する
+
+           例: http://api.twitter.com/1/users/search.xml?q=Doug%20Williams
+                Doug Williams という名前の人を探す
+
+        per_page=件数  (オプション)
+           1ページ辺り何件の情報を取得するか指定する。指定できる最大件数は 20
+
+           例: http://api.twitter.com/1/users/search.xml?q=Doug%20Williams&per_page=5
+                Doug Williams という名前の人を最大5人分取得する
+
+        page=ページ番号 (オプション)
+          (1ページを 20件 または per_page で指定した件数とみなしたときの)ページ番号を指定することで、指定ページ番号に相当する検索結果を取得する
+          [訳者注: デフォルトは 1ページ=20件 であると思われる]
+
+             例:
+               http://api.twitter.com/1/users/search.xml?q=Doug%20Williams&page=3
+                 API実行時点で3ページ目に相当する検索結果(Doug Williams という名前の人の一覧)を XML 形式で取得する
+                 (1ページ=20件の場合は、3ページ目=41件目～60件目となる)
+
+     メソッド: GET
+     API制限:  適用対象
+
+     参考:
+        「ついったーで検索」タブの「検索」ボタンを使って検索を実行する場合
+            http://twitter.com/search/users?q=検索条件&category=people&source=find_on_twitter
+        に相当する http GET リクエストが送信される
+
+        ちなみに、
+            http://twitter.com/users/search.xml?q=wakatter
+        を実行すると wakatter に関する検索結果が返ってくるが、format を指定することなく
+            http://twitter.com/users/search?q=wakatter
+        を実行すると、(wakatter に関する検索結果ではなく) search という名前のユーザに関する情報が(XML形式で)返ってくる (訳者による調査結果)
+
+
 ダイレクトメッセージ関連のAPI
 
   direct_messages
@@ -2078,11 +2152,12 @@ IM関連のAPI
      URL: http://twitter.com/help/test.format
        (format は xml, json のうちのいずれかを指定)
 
+     引数:
+        なし
+
      メソッド: GET
      API制限:  適用対象外
 
-     引数:
-        なし
 
   downtime_schedule
      Twitter のメインテナンスが予定されるときに http://twitter.com/home に表示されるのと同じ文字列を指定formatで返す
@@ -2132,6 +2207,435 @@ spam 報告関連のAPI
 
      メソッド: POST
      API制限:  適用対象 (1時間辺りの報告数の上限は固定)
+
+
+list 関連のAPI
+
+  POST lists       (create)
+     list を作成する
+
+     URL: http://api.twitter.com/1/user/lists.format
+       (user は自分のスクリーン名を指定。format は xml, json のうちのいずれかを指定)
+
+     引数:
+        name=リストの名前 (必須)
+          作成しようとしている list の名前を指定する
+
+        mode=public または mode=private (オプション)
+          作成しようとしている list を公開(public)にするか、非公開(private)にするか、指定する
+          本引数を指定しない場合は public を指定したものとみなす
+
+          例:
+            http://api.twitter.com/1/twitterapidocs/lists.xml に対して、以下のような内容の application/x-www-form-urlencoded 形式のデータを POST する
+                 name=doctors
+
+                 doctors という名前の list を作成する
+
+     メソッド: POST
+     API制限:  適用対象外
+
+
+  POST list id     (update)
+     指定 list を更新する
+
+     URL: http://api.twitter.com/1/user/lists/id.format
+       (user は自分のスクリーン名を指定。format は xml, json のうちのいずれかを指定)
+
+     引数:
+        id=リストの名前 (必須)
+          更新しようとしている list の名前を指定する
+
+        name=リストの名前 (オプション)
+           list の名前を、本引数で指定した名前に変更する
+
+        mode=public または mode=private (オプション)
+          list を公開(public)にするか、非公開(private)にするか、指定する
+          本引数を指定しない場合は今までの状態(公開、もしくは非公開)が保存される(変更は行なわれない)
+
+          例:
+            http://api.twitter.com/1/twitterapidocs/lists/doctors.xml に対して、以下のような内容の application/x-www-form-urlencoded 形式のデータを POST する
+                 name=surgeons&mode=private
+
+                 doctors という名前の list を surgeons という名前に変更し、非公開にする
+
+     メソッド: POST
+     API制限:  適用対象外
+
+
+  GET lists        (index)
+     指定ユーザの list の一覧を取得する。自分自身の list の一覧を取得する場合は、非公開の list も一覧に含まれる
+
+     URL: http://api.twitter.com/1/user/lists.format
+       (format は xml, json のうちのいずれかを指定)
+
+     引数:
+        user=list の一覧を取得する対象ユーザのスクリーン名 (必須)
+
+        cursor=-1 または cursor=カーソル位置  (オプション)
+          指定した(データベースの)カーソル位置以降の list の一覧を20件分取得する
+          -1 を指定した場合、先頭からの20件分を取得する。
+          応答本体に next_cursor がある場合は、「次のページ」(のカーソル位置)、previous_cursor がある場合は、「前のページ」(のカーソル位置)がそれぞれ存在することを示す。
+          本APIの次回実行時に、この next_cursor や previous_cursor の示すカーソル位置を使用することで、list の一覧の「次のページ」や「前のページ」相当分(20件分)を取得することができる。
+
+          例:
+            http://api.twitter.com/1/twitterapidocs/lists.xml?cursor=-1
+                 スクリーン名 twitterapidocs の list のうち、最初の20件を取得する
+
+            http://api.twitter.com/1/twitterapidocs/lists.xml?cursor=-1300794057949944903 
+                 スクリーン名 twitterapidocs の list のうち、カーソル位置 -1300794057949944903 以降の最初の20件を取得する
+
+     メソッド: GET
+     API制限:  適用対象
+
+
+  GET list id      (show)
+     指定ユーザの指定 list に関する情報を取得する。自分自身の list を取得する場合は、非公開の list であっても情報を取得可能である
+
+     URL: http://api.twitter.com/1/user/lists/id.format
+       (format は xml, json のうちのいずれかを指定)
+
+     引数:
+        user=list の一覧を取得する対象ユーザのスクリーン名 (必須)
+
+        id=リストの名前 (必須)
+          情報取得対象の list の名前を指定する
+
+          例:
+            http://api.twitter.com/1/twitterapidocs/lists/doctors.xml
+                 スクリーン名 twitterapidocs の doctors という名前の list に関する情報を取得する
+
+     メソッド: GET
+     API制限:  適用対象
+
+
+  DELETE list id   (destroy)
+     指定 list を削除する
+
+     URL: http://api.twitter.com/1/user/lists/id.format
+       (user は自分のスクリーン名を指定。format は xml, json のうちのいずれかを指定)
+
+     引数:
+        id=リストの名前 (必須)
+          削除しようとしている list の名前を指定する
+
+          例:
+            http://api.twitter.com/1/twitterapidocs/lists/doctors.xml に対して DELETE リクエストを送信する
+
+                 doctors という名前の list を削除する
+
+            http://api.twitter.com/1/twitterapidocs/lists/doctors.xml に対して、以下のような内容の application/x-www-form-urlencoded 形式のデータを POST する
+                 _method=DELETE
+
+                 doctors という名前の list を削除する
+
+     メソッド: DELETE または POST
+               ただし、POST 使用時は _method=DELETE を指定する必要がある [POST list id (update) と区別できるようにするため]
+     API制限:  適用対象外
+
+
+  GET list statuses
+     指定した list に登録されているメンバーのみで構成されるタイムラインを取得する
+
+     URL: http://api.twitter.com/1/user/lists/list_id/statuses.format
+       (format は xml, json, atom のうちのいずれかを指定)
+
+     引数:
+        user=当該 list 作成者のスクリーン名 (必須)
+
+        list_id=リストの名前 (必須)
+          タイムライン取得対象の list の名前を指定する
+
+        since_id=ステータスID  (オプション)
+          指定したIDより大きな値のIDのステータスのみ取得する (指定したIDは取得対象外)
+
+            例:
+               http://api.twitter.com/1/twitterapi/lists/team/statuses.xml?since_id=12345
+                 スクリーン名 twitterapi の作成した team という名前の list に登録されているメンバーの発言のうち、ステータスID 12345 以降に update されたものを、古いものから順に最大20件分、XML 形式で取得する
+
+        max_id=ステータスID  (オプション)
+          指定したステータスID以下の値のIDのステータスのみ取得する (指定したIDも取得対象内)
+
+            例:
+               http://api.twitter.com/1/twitterapi/lists/team/statuses.xml?max_id=54321
+                 スクリーン名 twitterapi の作成した team という名前の list に登録されているメンバーの発言のうち、ステータスID 54321 以前に update された発言(のうち、新しいもの最大20件)を XML 形式で取得する
+
+        per_page=件数  (オプション)
+          1ページ辺り何件の情報を取得するか指定する。指定できる最大件数は 200
+
+             例:
+               http://api.twitter.com/1/twitterapi/lists/team/statuses.xml?per_page=5
+                 スクリーン名 twitterapi の作成した team という名前の list に登録されているメンバーの発言のうち、新しいもの最大5件を XML 形式で取得する
+
+        page=ページ番号 (オプション)
+          (1ページを20件 または per_page で指定した件数であるとみなしたときの)ページ番号を指定することで、過去の任意の発言を取得する
+          なお、この page オプションは、Twitter の負荷が高いとき等、一時的に使えないようにする(あるいは、指定可能なページ番号の最大値を制限する)ことがある
+
+             例:
+               http://api.twitter.com/1/twitterapi/lists/team/statuses.xml?page=3
+                 スクリーン名 twitterapi の作成した team という名前の list に登録されているメンバーの発言のうち、API実行時点で41件目から60件目に相当するステータスを XML 形式で取得する
+
+     メソッド: GET
+     API制限:  適用対象
+
+
+  GET list memberships
+     指定したユーザの作成した list に登録されているメンバーの一覧を取得する
+
+     URL: http://api.twitter.com/1/user/lists/memberships.format
+       (format は xml, json のうちのいずれかを指定)
+
+     引数:
+        user=リスト情報取得対象のユーザのスクリーン名 (必須)
+
+        cursor=-1 または cursor=カーソル位置  (オプション)
+          指定した(データベースの)カーソル位置以降の list の一覧を20件分取得する
+          -1 を指定した場合、先頭からの20件分を取得する。
+          応答本体に next_cursor がある場合は、「次のページ」(のカーソル位置)、previous_cursor がある場合は、「前のページ」(のカーソル位置)がそれぞれ存在することを示す。
+          本APIの次回実行時に、この next_cursor や previous_cursor の示すカーソル位置を使用することで、list の一覧の「次のページ」や「前のページ」相当分(20件分)を取得することができる。
+
+          例:
+            http://api.twitter.com/1/twitterapi/lists/memberships.xml?cursor=-1
+                 スクリーン名 twitterapi の作成した list のうち、最初の 20 リストの各登録者一覧を取得する
+
+            http://api.twitter.com/1/twitterapi/lists/memberships.xml?cursor=-1300794057949944903
+                 スクリーン名 twitterapi の作成した list のうち、カーソル位置 -1300794057949944903 以降の最初の20リストの各登録者一覧を取得する
+
+     メソッド: GET
+     API制限:  適用対象
+
+
+  GET list subscriptions
+     指定したユーザの作成した list を購読している人の一覧を取得する
+
+     URL: http://api.twitter.com/1/user/lists/subscriptions.format
+       (format は xml, json のうちのいずれかを指定)
+
+     引数:
+        user=リスト情報取得対象のユーザのスクリーン名 (必須)
+
+        cursor=-1 または cursor=カーソル位置  (オプション)
+          指定した(データベースの)カーソル位置以降の list の一覧を20件分取得する
+          -1 を指定した場合、先頭からの20件分を取得する。
+          応答本体に next_cursor がある場合は、「次のページ」(のカーソル位置)、previous_cursor がある場合は、「前のページ」(のカーソル位置)がそれぞれ存在することを示す。
+          本APIの次回実行時に、この next_cursor や previous_cursor の示すカーソル位置を使用することで、list の一覧の「次のページ」や「前のページ」相当分(20件分)を取得することができる。
+
+          例:
+            http://api.twitter.com/1/twitterapi/lists/subscriptions.xml?cursor=-1
+                 スクリーン名 twitterapi の作成した list のうち、最初の 20 リストの各購読者一覧を取得する
+
+            http://api.twitter.com/1/twitterapi/lists/subscriptions.xml?cursor=-1300794057949944903 
+                 スクリーン名 twitterapi の作成した list のうち、カーソル位置 -1300794057949944903 以降の最初の20リストの各購読者一覧を取得する
+
+     メソッド: GET
+     API制限:  適用対象
+
+
+list の登録内容に関する API
+
+  GET list members
+     指定した list に登録されているメンバーの一覧を取得する
+
+     URL: http://api.twitter.com/1/user/list_id/members.format
+       (format は xml, json のうちのいずれかを指定)
+
+     引数:
+        user=リスト情報取得対象のユーザのスクリーン名 (必須)
+
+        list_id=リストの名前 (必須)
+          メンバー一覧取得対象の list の名前を指定する
+
+        cursor=-1 または cursor=カーソル位置  (オプション)
+          指定した(データベースの)カーソル位置以降のメンバーの一覧を20人分取得する
+          -1 を指定した場合、先頭からの20人分を取得する。
+          応答本体に next_cursor がある場合は、「次のページ」(のカーソル位置)、previous_cursor がある場合は、「前のページ」(のカーソル位置)がそれぞれ存在することを示す。
+          本APIの次回実行時に、この next_cursor や previous_cursor の示すカーソル位置を使用することで、メンバーの一覧の「次のページ」や「前のページ」相当分(20人分)を取得することができる。
+
+          例:
+            http://api.twitter.com/1/twitterapi/team/members.xml?cursor=-1
+                 スクリーン名 twitterapi の作成した team という名前の list に登録されている人の一覧を取得する
+
+            http://api.twitter.com/1/twitterapi/team/members.xml?cursor=-1300794057949944903
+                 スクリーン名 twitterapi の作成した team という名前の list に登録されている人のうち、カーソル位置 -1300794057949944903 以降の最初の20人分を取得する
+
+     メソッド: GET
+     API制限:  適用対象
+
+
+  POST list members
+     指定した list にメンバーを追加する。1つの list に最大500人まで登録できる
+
+     URL: http://api.twitter.com/1/user/list_id/members.format
+       (user は自分のスクリーン名を指定。format は xml, json のうちのいずれかを指定)
+
+     引数:
+        list_id=リストの名前 (必須)
+          メンバー追加対象の list の名前を指定する
+
+        id=ユーザID (必須)
+          list に追加したいユーザの ID を指定する
+
+          例:
+            http://api.twitter.com/1/twitterapi/team/members.xml に対して、以下のような内容の application/x-www-form-urlencoded 形式のデータを POST する
+                 id=3191321
+
+                 team という名前の list にユーザID 3191321 の人を追加する
+
+     メソッド: POST
+     API制限:  適用対象外
+
+
+  DELETE list members
+     指定した list からメンバーを削除する
+
+     URL: http://api.twitter.com/1/user/list_id/members.format
+       (user は自分のスクリーン名を指定。format は xml, json のうちのいずれかを指定)
+
+     引数:
+        list_id=リストの名前 (必須)
+          メンバー削除対象の list の名前を指定する
+
+        id=ユーザID (必須)
+          list から削除したいユーザの ID を指定する
+
+          例:
+            http://api.twitter.com/1/twitterapi/team/members.xml に対して、以下のような内容の application/x-www-form-urlencoded 形式のデータを DELETE する
+                 id=3191321
+
+                 team という名前の list からユーザID 3191321 の人を削除する
+
+            http://api.twitter.com/1/twitterapi/team/members.xml に対して、以下のような内容の application/x-www-form-urlencoded 形式のデータを POST する
+                 id=3191321&_method=DELETE
+
+                 team という名前の list からユーザID 3191321 の人を削除する
+
+     メソッド: DELETE または POST
+               ただし、POST 使用時は _method=DELETE を指定する必要がある [POST list members と区別できるようにするため]
+     API制限:  適用対象外
+
+
+  GET list members id
+     指定したユーザが、指定した list のメンバーであるかどうかを確認する。
+     登録されている場合は、そのユーザに関する情報が返る (ユーザ情報が返ってこなかった場合は、そのユーザは登録されていない、ということになる)
+
+     URL: http://api.twitter.com/1/user/list_id/members/id.format
+       (format は xml, json のうちのいずれかを指定)
+
+     引数:
+        user=確認対象のリストの作成者のスクリーン名 (必須)
+
+        list_id=リストの名前 (必須)
+          確認対象の list の名前を指定する
+
+        id=ユーザID (必須)
+          list のメンバーであるか確認したいユーザのIDを指定する
+
+          例:
+            http://api.twitter.com/1/twitterapi/team/members/3191321.xml
+                 スクリーン名 twitterapi の作成した team という名前の list にユーザID 3191321 の人が登録されているかどうかを確認する
+
+     メソッド: GET
+     API制限:  適用対象
+
+
+list の購読に関する API
+
+  GET list subscribers
+     指定した list を購読している人の一覧を取得する
+
+     URL: http://api.twitter.com/1/user/list_id/subscribers.format
+       (format は xml, json のうちのいずれかを指定)
+
+     引数:
+        user=リスト情報取得対象のユーザのスクリーン名 (必須)
+
+        list_id=リストの名前 (必須)
+          購読者一覧取得対象の list の名前を指定する
+
+        cursor=-1 または cursor=カーソル位置  (オプション)
+          指定した(データベースの)カーソル位置以降の購読者の一覧を20人分取得する
+          -1 を指定した場合、先頭からの20人分を取得する。
+          応答本体に next_cursor がある場合は、「次のページ」(のカーソル位置)、previous_cursor がある場合は、「前のページ」(のカーソル位置)がそれぞれ存在することを示す。
+          本APIの次回実行時に、この next_cursor や previous_cursor の示すカーソル位置を使用することで、購読者の一覧の「次のページ」や「前のページ」相当分(20人分)を取得することができる。
+
+          例:
+            http://api.twitter.com/1/twitterapi/team/subscribers.xml?cursor=-1
+                 スクリーン名 twitterapi の作成した team という名前の list を購読している人の一覧を取得する
+
+            http://api.twitter.com/1/twitterapi/team/subscribers.xml?cursor=-1300794057949944903 
+                 スクリーン名 twitterapi の作成した team という名前の list を購読している人のうち、カーソル位置 -1300794057949944903 以降の最初の20人分を取得する
+
+     メソッド: GET
+     API制限:  適用対象
+
+
+  POST list subscribers
+     指定した list を購読する
+
+     URL: http://api.twitter.com/1/user/list_id/subscribers.format
+       (format は xml, json のうちのいずれかを指定)
+
+     引数:
+        user=リスト作成者のスクリーン名 (必須)
+
+        list_id=リストの名前 (必須)
+          購読したい list の名前を指定する
+
+          例:
+            http://api.twitter.com/1/twitterapi/team/subscribers.xml
+                 スクリーン名 twitterapi の作成した team という名前の list を購読する
+
+     メソッド: POST
+     API制限:  適用対象外
+
+
+  DELETE list subscribers
+     指定した list の購読を解除する
+
+     URL: http://api.twitter.com/1/user/list_id/members.format
+       (format は xml, json のうちのいずれかを指定)
+
+     引数:
+        user=リスト作成者のスクリーン名 (必須)
+
+        list_id=リストの名前 (必須)
+          購読解除対象の list の名前を指定する
+
+          例:
+            http://api.twitter.com/1/twitterapi/team/subscribers.xml に対して DELETE リクエストを送信する
+                 スクリーン名 twitterapi の作成した team という名前の list の購読をやめる
+
+            http://api.twitter.com/1/twitterapi/team/subscribers.xml に対して、以下のような内容の application/x-www-form-urlencoded 形式のデータを POST する
+                 _method=DELETE
+
+                 スクリーン名 twitterapi の作成した team という名前の list の購読をやめる
+
+     メソッド: DELETE または POST
+               ただし、POST 使用時は _method=DELETE を指定する必要がある [POST list subscribers と区別できるようにするため]
+     API制限:  適用対象外
+
+
+  GET list subscribers id
+     指定したユーザが、指定した list の購読者であるかどうかを確認する。
+     購読している場合は、そのユーザに関する情報が返る (ユーザ情報が返ってこなかった場合は、そのユーザは購読していない、ということになる)
+
+     URL: http://api.twitter.com/1/user/list_id/subscribers/id.format
+       (format は xml, json のうちのいずれかを指定)
+
+     引数:
+        user=確認対象のリストの作成者のスクリーン名 (必須)
+
+        list_id=リストの名前 (必須)
+          確認対象の list の名前を指定する
+
+        id=ユーザID (必須)
+          list の購読者であるか確認したいユーザのIDを指定する
+
+          例:
+            http://api.twitter.com/1/twitterapi/team/subscribers/2625781.xml
+                 スクリーン名 twitterapi の作成した team という名前の list をユーザID 2625781 の人が購読しているかどうかを確認する
+
+     メソッド: GET
+     API制限:  適用対象
 
 
 OAuth関連
@@ -2400,7 +2904,7 @@ OAuth関連
 
      認証: 不要
      メソッド: GET
-     API制限:  適用対象 (IPアドレス単位で制限。同一APアドレスからの「検索関連のAPI」の実行は1時間辺り100回まで)
+     API制限:  適用対象 (IPアドレス単位で制限。同一APアドレスからの「REST API」の実行は1時間辺り100回まで)
      注記: 
       「検索関連のAPI」の「ユーザID(from_user_id および to_user_id)」とそれ以外のAPIの「ユーザID」は別のものである (詳細は http://code.google.com/p/twitter-api/issues/detail?id=214 を参照)。
       「検索関連のAPI」の「ユーザID」は Twitter 上の実際の「ユーザID」とは違う。本APIを利用するアプリケーションで実際の「ユーザID」が必要な場合は、「スクリーン名(from_user および to_user)を元に、users/show API を使って「スクリーン名」と実際の「ユーザID」の対応関係を取得するようにして欲しい
@@ -2418,7 +2922,7 @@ OAuth関連
 
      認証: 不要
      メソッド: GET
-     API制限:  適用対象  (IPアドレス単位で制限。同一APアドレスからの「検索関連のAPI」の実行は1時間辺り100回まで)
+     API制限:  適用対象  (IPアドレス単位で制限。同一APアドレスからの「REST API」の実行は1時間辺り150回まで)
 
 
   trends/current
@@ -2438,7 +2942,7 @@ OAuth関連
 
      認証: 不要
      メソッド: GET
-     API制限:  適用対象  (IPアドレス単位で制限。同一APアドレスからの「検索関連のAPI」の実行は1時間辺り100回まで)
+     API制限:  適用対象  (IPアドレス単位で制限。同一APアドレスからの「REST API」の実行は1時間辺り150回まで)
 
 
   trends/daily
@@ -2465,7 +2969,7 @@ OAuth関連
 
      認証: 不要
      メソッド: GET
-     API制限:  適用対象  (IPアドレス単位で制限。同一APアドレスからの「検索関連のAPI」の実行は1時間辺り100回まで)
+     API制限:  適用対象  (IPアドレス単位で制限。同一APアドレスからの「REST API」の実行は1時間辺り150回まで)
 
 
   trends/weekly
@@ -2492,7 +2996,60 @@ OAuth関連
 
      認証: 不要
      メソッド: GET
-     API制限:  適用対象  (IPアドレス単位で制限。同一APアドレスからの「検索関連のAPI」の実行は1時間辺り100回まで)
+     API制限:  適用対象  (IPアドレス単位で制限。同一APアドレスからの「REST API」の実行は1時間辺り150回まで)
+
+
+地域情報検索関連のAPI
+  trends/available         [まもなく登場]
+    ホットな話題が存在する地域の情報(配列)を取得する
+    引数で緯度、経度を指定した場合は、その地点に近い順に並び替えた「ホットな話題が存在する地域の情報(配列)」が返る
+
+    取得結果には WOEID (a Yahoo! Where On Earth ID) 表現による位置情報や人間が読める形式の地名情報(例えば San Francisco)が格納される
+
+     URL: http://api.twitter.com/1/trends/available.format
+       (format は xml, json のうちのいずれかを指定)
+
+     引数:
+        lat=緯度 (オプション)
+           この引数を使う場合は、long 引数と同時に使用する必要がある
+           投稿しようとしている発言に関する位置情報のうち、「緯度」を指定する
+           -90.0 から +90.0 の範囲の値を指定する (正の値の場合「北緯」、負の値の場合「南緯」)
+           指定した緯度、経度の地点に近いものから順に並び替えた「地域情報(配列)」を返す
+
+        long=経度 (オプション)
+           この引数を使う場合は、lat 引数と同時に使用する必要がある
+           投稿しようとしている発言に関する位置情報のうち、「経度」を指定する
+           -180.0 から +180.0 の範囲の値を指定する (正の値の場合「東経」、負の値の場合「西経」)
+
+     認証: 不要
+     メソッド: GET
+     API制限:  適用対象  (IPアドレス単位で制限。同一APアドレスからの「REST API」の実行は1時間辺り150回まで)
+
+     参考:
+       ・WOEID (a Yahoo! Where On Earth ID) に関しては、以下のWebページを参照のこと
+          http://developer.yahoo.com/geo/geoplanet/
+       ・2009年11月17日現在、引数を指定しない場合は trends/current と同一の結果が返る模様 (引数を指定した場合はエラーになる)
+       ・取得できる件数は最大何件なのか、今のところ不明
+
+
+  trends/location          [まもなく登場]
+    WOEID で指定した地点の付近のホットな情報を取得する (最大10件)
+    なお、取得結果は5分間キャッシュされる (5分以内に同じ引数で本APIを実行した場合は、前回実行時と同じ結果が返る)
+
+     URL: http://api.twitter.com/1/trends/woeid.format
+       (format は xml, json のうちのいずれかを指定)
+
+     引数:
+       woeid (必須)
+         情報を取得したい地点を WOEID で指定する
+
+             例:
+               http://api.twitter.com/1/trends/44418.json
+                 WOEID 44418 (London) 付近のホットな話題を取得する
+
+     認証: 不要
+     メソッド: GET
+     API制限:  適用対象  (IPアドレス単位で制限。同一APアドレスからの「REST API」の実行は1時間辺り150回まで)
 
 
 検索条件保存
@@ -2949,6 +3506,16 @@ OAuth関連
     緯度経度情報が応答に含まれる API に関して、今のところ、緯度経度情報は含まれていない
 
 
+  list 関連 API 群 (list 関連のAPI、list の登録内容に関する API、list の購読に関する API)
+    従来の API では page と count の組み合わせでページングが行なわれているが、なぜか「list 関連 API 群」では page と per_page の組み合わせでページングが行なわれている。
+
+
+  API の URL の新しい体系
+    「lists 関連 API 群」、「地域情報検索関連のAPI」では、API の URL が  http://api.twitter.com/ で始まるものになっている。
+     今後追加される API は、http://api.twitter.com/ で始まる URL に統一されるのかもしれない。
+     例えば、retweet 関連 API が正式に公開されたとき、http://api.twitter.com/ で始まる URL を使うよう、仕様変更される可能性がある
+
+
   その他
     2009年4月9日、POST メソッドによるタイムライン取得ができなくなった。
     (それまでは、本来 GET で取得すべきタイムラインが、なぜか POST でも取得できていた)
@@ -2957,6 +3524,15 @@ OAuth関連
 
 
 変更履歴
+  2009年11月17日 第三十七版 (2009年11月17日版原本がベース)
+     (1) 「ユーザ情報関連のAPI」に search を追加
+     (2) 「list 関連のAPI」を新設。POST lists (create), POST list id (update), GET lists (index), GET list id (show), DELETE list id (destroy), GET list statuses, GET list memberships, GET list subscriptions を追加
+     (3) 「list の登録内容に関する API」を新設。GET list members, POST list members, DELETE list members, GET list members id を追加
+     (4) 「list の購読に関する API」を新設。GET list subscribers, POST list subscribers, DELETE list subscribers, GET list subscribers id を追加
+     (5) 「地域情報検索関連のAPI」を新設。trends/available, trends/location を追加
+     (6) 同一APアドレスからの「検索関連のAPI」の実行は1時間辺り100回まで → 同一APアドレスからの「REST API」の実行は1時間辺り150回まで に変更
+     (7) 「備考」に“list 関連 API 群”を追加
+     (8) 「備考」に“API の URL の新しい体系”を追加
   2009年10月29日 第三十六版 (2009年10月28日版原本がベース)
      (1) 「REST」の“HTTPリクエスト”、「API の実行回数制限」の説明を現状に合わせて修正
      (2) 「あなたの作成したクライアントの名前が、Twitter の Webページ上の発言に“from クライアント名”という形で掲載されるようにする方法」の説明を現状に合わせて修正
