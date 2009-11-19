@@ -1,7 +1,7 @@
-﻿Twitter API 仕様書 <title>Twitter API 仕様書 日本語訳 第三十八版 (2009年11月18日版)</title>
+﻿Twitter API 仕様書 <title>Twitter API 仕様書 日本語訳 第三十九版 (2009年11月19日版)</title>
   日本語訳: tsupo (http://watcher.moe-nifty.com/  mailto:tsupo@na.rim.or.jp)
 
-  http://apiwiki.twitter.com/Twitter-API-Documentation の2009年11月17日版の大雑把な日本語訳
+  http://apiwiki.twitter.com/Twitter-API-Documentation の2009年11月19日版の大雑把な日本語訳
   (ただし、そのまま翻訳したわけではなく、一部、意訳。また、現時点の実装状況に合わせて、内容を修正している)
 
 
@@ -332,6 +332,135 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
 
     応答例:
       XML の場合
+       2009年11月19日以降は、以下の形式が採用されている
+
+        <?xml version="1.0" encoding="UTF-8"?>
+        <statuses type="array">
+          <status>
+             <created_at>Wed Nov 18 18:54:12 +0000 2009</created_at>
+             <id>5833943856</id>
+             <text>RT @peoplemag: New Moon director Chris Weitz says he's quitting movies after one more http://ow.ly/DrjQ</text>
+             <source>web</source>
+             <truncated>false</truncated>
+             <in_reply_to_status_id></in_reply_to_status_id>
+             <in_reply_to_user_id></in_reply_to_user_id>
+             <favorited>false</favorited>
+             <in_reply_to_screen_name></in_reply_to_screen_name>
+             <retweeted_status>
+                <created_at>Wed Nov 18 18:36:34 +0000 2009</created_at>
+                <id>5833513351</id>
+                <text>New Moon director Chris Weitz says he's quitting movies after one more http://ow.ly/DrjQ</text>
+                <source><a href="http://www.hootsuite.com" rel="nofollow">HootSuite</a></source>
+                <truncated>false</truncated>
+                <in_reply_to_status_id></in_reply_to_status_id>
+                <in_reply_to_user_id></in_reply_to_user_id>
+                <favorited>false</favorited>
+                <in_reply_to_screen_name></in_reply_to_screen_name>
+                <user>
+                   <id>25589776</id>
+                   <name>People magazine</name>
+                   <screen_name>peoplemag</screen_name>
+                   <location></location>
+                   <description>PEOPLE.com is the No. 1 site for celebrity news!</description>
+                   <profile_image_url>http://a3.twimg.com/profile_images/116213891/people_73x73_normal.jpg</profile_image_url>
+                   <url>http://www.people.com</url>
+                   <protected>false</protected>
+                   <followers_count>1653473</followers_count>
+                   <profile_background_color>08a9e7</profile_background_color>
+                   <profile_text_color>000000</profile_text_color>
+                   <profile_link_color>ee0077</profile_link_color>
+                   <profile_sidebar_fill_color>ffee9a</profile_sidebar_fill_color>
+                   <profile_sidebar_border_color>ffcc66</profile_sidebar_border_color>
+                   <friends_count>406</friends_count>
+                   <created_at>Fri Mar 20 22:30:24 +0000 2009</created_at>
+                   <favourites_count>2</favourites_count>
+                   <utc_offset>-18000</utc_offset>
+                   <time_zone>Eastern Time (US & Canada)</time_zone>
+                   <profile_background_image_url>http://a1.twimg.com/profile_background_images/6859800/bgpage.gif</profile_background_image_url>
+                   <profile_background_tile>true</profile_background_tile>
+                   <statuses_count>1740</statuses_count>
+                   <notifications>false</notifications>
+                   <geo_enabled>false</geo_enabled>
+                   <verified>false</verified>
+                   <following>false</following>
+                </user>
+                <geo/>
+             </retweeted_status>
+             <user>
+                <id>44940026</id>
+                <name>Anita Doller</name>
+                <screen_name>testiverse</screen_name>
+                <location></location>
+                <description></description>
+                <profile_image_url>http://a3.twimg.com/profile_images/251164577/testing_normal.JPG</profile_image_url>
+                <url></url>
+                <protected>false</protected>
+                <followers_count>14</followers_count>
+                <profile_background_color>9ae4e8</profile_background_color>
+                <profile_text_color>000000</profile_text_color>
+                <profile_link_color>0000ff</profile_link_color>
+                <profile_sidebar_fill_color>e0ff92</profile_sidebar_fill_color>
+                <profile_sidebar_border_color>87bc44</profile_sidebar_border_color>
+                <friends_count>25</friends_count>
+                <created_at>Fri Jun 05 17:07:09 +0000 2009</created_at>
+                <favourites_count>1</favourites_count>
+                <utc_offset>-28800</utc_offset>
+                <time_zone>Pacific Time (US & Canada)</time_zone>
+                <profile_background_image_url>http://s.twimg.com/a/1258507899/images/themes/theme1/bg.png</profile_background_image_url>
+                <profile_background_tile>false</profile_background_tile>
+                <statuses_count>14</statuses_count>
+                <notifications>false</notifications>
+                <geo_enabled>false</geo_enabled>
+                <verified>false</verified>
+                <following>true</following>
+             </user>
+             <geo/>
+          </status>
+          <status>
+             <created_at>Wed Nov 18 18:53:17 +0000 2009</created_at>
+             <id>5833921302</id>
+             <text>Can't believe I didn't know about TextMate column-select. @macasek just showed me the power. Now I can't be stopped.</text>
+             <source><a href="http://www.atebits.com/" rel="nofollow">Tweetie</a></source>
+             <truncated>false</truncated>
+             <in_reply_to_status_id></in_reply_to_status_id>
+             <in_reply_to_user_id></in_reply_to_user_id>
+             <favorited>false</favorited>
+             <in_reply_to_screen_name></in_reply_to_screen_name>
+             <user>
+                <id>364</id>
+                <name>Mike Champion</name>
+                <screen_name>graysky</screen_name>
+                <location>Boston, MA</location>
+                <description>Developer at @oneforty</description>
+                <profile_image_url>http://a1.twimg.com/profile_images/72387934/me3_normal.jpg</profile_image_url>
+                <url>http://graysky.org</url>
+                <protected>false</protected>
+                <followers_count>866</followers_count>
+                <profile_background_color>2f2f2f</profile_background_color>
+                <profile_text_color>2f2f2f</profile_text_color>
+                <profile_link_color>599B4C</profile_link_color>
+                <profile_sidebar_fill_color>FDFDFD</profile_sidebar_fill_color>
+                <profile_sidebar_border_color>599B4C</profile_sidebar_border_color>
+                <friends_count>387</friends_count>
+                <created_at>Sat Jun 24 17:47:36 +0000 2006</created_at>
+                <favourites_count>53</favourites_count>
+                <utc_offset>-18000</utc_offset>
+                <time_zone>Eastern Time (US & Canada)</time_zone>
+                <profile_background_image_url>http://a1.twimg.com/profile_background_images/332/mem_drive_large.jpg</profile_background_image_url>
+                <profile_background_tile>false</profile_background_tile>
+                <statuses_count>3489</statuses_count>
+                <notifications>false</notifications>
+                <geo_enabled>false</geo_enabled>
+                <verified>false</verified>
+                <following>false</following>
+             </user>
+             <geo/>
+          </status>
+           ... (略) ...
+        </statuses>
+
+
+       参考: 2009年11月19日以前は、以下の形式が採用されていた
         <?xml version="1.0" encoding="UTF-8"?>
         <statuses>
           <status>
@@ -440,11 +569,17 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
              </user>
           </status>
            ... (略) ...
-        </statuses> 
+        </statuses>
+
 
      訳者による注記:
         2009年9月下旬(24日ごろ?)から home_timeline の取得ができる(not found エラーにならない)ようになった。
         ただし、取得内容は、今のところ、friends_timeline と完全に同一である(retweet 関連 API の正式公開時までは friends_timeline と同一内容のままだと思われる)。
+
+        2009年11月上旬の「公式RT」限定公開以降、 「公式RT」公開対象者限定で home_timeline に「公式RT」された発言が含まれるようになった。
+        2009年11月19日、「公式RT」された発言の本文(text要素)の冒頭に
+           RT @オリジナルの発言者のスクリーン名:
+        という文字が付加されるようになった (他のタイムライン取得系APIや検索系APIの取得結果に「公式RT」が含まれる場合も同様)
 
 
   friends_timeline
@@ -2231,6 +2366,10 @@ list 関連のAPI
 
                  doctors という名前の list を作成する
 
+        description=説明 (オプション)
+          作成しようとしている list の説明文を指定する。説明文の長さは100文字まで
+          (訳者注: 今のところ、説明文は ASCII の範囲内の文字しか使えない。日本語を使うと文字化けする)
+
      メソッド: POST
      API制限:  適用対象外
 
@@ -2257,6 +2396,11 @@ list 関連のAPI
                  name=surgeons&mode=private
 
                  doctors という名前の list を surgeons という名前に変更し、非公開にする
+
+        description=説明 (オプション)
+          list の説明文を指定する。説明文の長さは100文字まで
+          本引数を指定しない場合、説明文の変更は行なわれない
+          (訳者注: 今のところ、説明文は ASCII の範囲内の文字しか使えない。日本語を使うと文字化けする)
 
      メソッド: POST
      API制限:  適用対象外
@@ -3524,6 +3668,9 @@ OAuth関連
 
 
 変更履歴
+  2009年11月20日 第三十九版 (2009年11月19日版原本がベース)
+     (1) 「タイムライン関連のAPI」の home_timeline の“応答例”を変更。“訳者による注記”に追記
+     (2) 「list 関連のAPI」の POST lists (create), POST list id (update) に“description”引数を各々追加
   2009年11月18日 第三十八版 (2009年11月17日版原本がベース)
      (1) 「list 関連のAPI」のうち、GET list memberships と GET list subscriptions の説明を修正
   2009年11月17日 第三十七版 (2009年11月17日版原本がベース)
