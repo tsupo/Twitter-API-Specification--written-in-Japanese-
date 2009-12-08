@@ -1,28 +1,28 @@
-﻿Twitter API 仕様書 <title>Twitter API 仕様書 日本語訳 第三十九版 (2009年11月19日版)</title>
+﻿Twitter API 仕様書         <!-- おまじない → --><title>Twitter API 仕様書 日本語訳 第四十版 (2009年11月25日版)</title><pre><!-- ← おまじない -->
   日本語訳: tsupo (http://watcher.moe-nifty.com/  mailto:tsupo@na.rim.or.jp)
 
-  http://apiwiki.twitter.com/Twitter-API-Documentation の2009年11月19日版の大雑把な日本語訳
+  http://apiwiki.twitter.com/Twitter-API-Documentation の2009年11月25日版の大雑把な日本語訳
   (ただし、そのまま翻訳したわけではなく、一部、意訳。また、現時点の実装状況に合わせて、内容を修正している)
 
 
 メソッド一覧
   タイムライン関連のAPI:
      statuses/public_timeline
-     statuses/home_timeline   [まもなく登場]
+     statuses/home_timeline
      statuses/friends_timeline
      statuses/user_timeline
      statuses/replies
      statuses/mentions
-     statuses/retweeted_by_me [まもなく登場]
-     statuses/retweeted_to_me [まもなく登場]
-     statuses/retweets_of_me  [まもなく登場]
+     statuses/retweeted_by_me
+     statuses/retweeted_to_me
+     statuses/retweets_of_me
 
   ステータス関連のAPI:
      statuses/show
      statuses/update
      statuses/destroy
-     statuses/retweet         [まもなく登場]
-     statuses/retweets        [まもなく登場]
+     statuses/retweet
+     statuses/retweets
 
   ユーザ情報関連のAPI:
      statuses/friends
@@ -285,7 +285,7 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
            2009年3月下旬から、profile_image_url要素で示される画像(ユーザアイコン)のURLがデフォルトのユーザアイコンのURL固定になっている(バグとして報告されているが、2009年4月14日現在、改修されていない)
 
 
-  home_timeline [まもなく登場]
+  home_timeline
      自分と自分の friend の過去24時間以内に update されたステータス(retweetを含む)から最大20件(count引数使用時は最大200件)を取得する。
 
      注意: friends_timeline との違い
@@ -825,7 +825,7 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
      API制限:  適用対象
 
 
-  retweeted_by_me [まもなく登場]
+  retweeted_by_me
      自分が投稿した retweet の一覧を取得する (最大20件)
 
      URL: http://twitter.com/statuses/retweeted_by_me.format
@@ -864,7 +864,7 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
      API制限:  適用対象
 
 
-  retweeted_to_me [まもなく登場]
+  retweeted_to_me
      自分の friends が投稿した retweet の一覧を取得する (最大20件)
 
      URL: http://twitter.com/statuses/retweeted_to_me.format
@@ -903,7 +903,7 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
      API制限:  適用対象
 
 
-  retweetes_of_me [まもなく登場]
+  retweetes_of_me
      自分が投稿した発言のうち(自分以外の)誰かによって retweet されたものの一覧を取得する (最大20件)
 
      URL: http://twitter.com/statuses/retweets_of_me.format
@@ -984,12 +984,12 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
         lat=緯度 (オプション) [将来、指定可能になる予定]
            投稿しようとしている発言に関する位置情報のうち、「緯度」を指定する
            -90.0 から +90.0 の範囲の値を指定する (正の値の場合「北緯」、負の値の場合「南緯」)
-           範囲外の値を指定した場合、geo_enabled が disabled に設定されている場合、あるいはlong引数が指定されていない場合、本引数は無視される
+           範囲外の値を指定した場合、geo_enabled が disabled(使用しない) に設定されている場合、あるいはlong引数が指定されていない場合、本引数は無視される
 
         long=経度 (オプション) [将来、指定可能になる予定]
            投稿しようとしている発言に関する位置情報のうち、「経度」を指定する
            -180.0 から +180.0 の範囲の値を指定する (正の値の場合「東経」、負の値の場合「西経」)
-           範囲外の値を指定した場合、geo_enabled が disabled に設定されている場合、あるいはlat引数が指定されていない場合、本引数は無視される
+           範囲外の値を指定した場合、geo_enabled が disabled(使用しない) に設定されている場合、あるいはlat引数が指定されていない場合、本引数は無視される
 
         source=クライアント名 (オプション)
           ステータスの投稿に使用しているクライアント名を指定する。
@@ -998,6 +998,22 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
           なお、本引数は公式のAPI仕様書には掲載されていない。
 
           参考: 2009年7月1日以降、未登録のアプリケーションによる API 経由での投稿に関して、from web ではなく、from API と表示されるようになった
+
+     位置情報(Geolocation, geotags)に関する注意:
+       ・geo_enabled の値が false [=disabled(使用しない)] に設定されているユーザの発言に位置情報が含まれる場合、その位置情報は無視される
+       ・XML形式での応答では、位置情報に関して、GeoRSS 準拠の表現を使用する (GeoRSS については http://georss.org/Main_Page を参照)
+       ・JSON形式での応答では、GeoJSON 準拠の表現を使用するが、現時点では、GeoJSON が
+            "coordinates":[経度, 緯度]
+         のように表現するのに対し、Twitter では
+            "coordinates":[緯度, 経度]
+         のように、経度、緯度の出現順序が逆になっている。Twitter API の Version 2 で、本来の GeoJSON と同じ出現順序に直す予定(当分の間は、このまま直さない)
+         (GeoJSON については http://geojson.org/ を参照)
+       ・発言に位置情報が含まれない場合は
+            <geo/>       (XML形式の場合)
+            "geo" : {}   (JSON形式の場合)
+         のような空の情報が格納される
+       ・ユーザの「設定」ページから、自分の全ての発言から全ての位置情報(geotags)を一気に削除する手段を提供する(予定)
+       ・今のところ、特定の発言のみ、位置情報(geotags)を削除する手段は提供していない
 
      メソッド: POST
      API制限:  適用対象外
@@ -1034,7 +1050,7 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
      API制限:  適用対象外
 
 
-  retweet [まもなく登場]
+  retweet
      指定したステータスを retweet する。ステータスIDの指定は必須。
      retweet が成功した場合は、format で指定した形式で応答(retweet 元のステータスと、retweet 結果)が返る
 
@@ -1059,7 +1075,7 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
            また、自分の発言を自分で retweet しようとした場合も、無視するようにしている。
 
 
-  retweets [まもなく登場]
+  retweets
      指定したステータスを retweet しているユーザの一覧のうち最初の100人分を取得する
 
      URL: http://twitter.com/statuses/retweets/id.format
@@ -2996,6 +3012,8 @@ OAuth関連
 
         geocode (オプション)
           指定した緯度・経度、半径(その緯度・経度から半径何マイル[mi]/キロメートル[km]以内か指定可能)で為された「発言」のみを検索対象とする
+          (注意: この位置情報(緯度・経度)は、Twitter のユーザのプロフィールに設定されている情報ではなく、Geotagging に対応した API 経由で取得したものになる
+                 [Twitter では、位置情報(geo引数)を含む形で投稿された発言から、その位置情報を取り出し、データベースに格納している])
 
              例:
                http://search.twitter.com/search.atom?geocode=40.757929%2C-73.985506%2C25km
@@ -3668,6 +3686,10 @@ OAuth関連
 
 
 変更履歴
+  2009年11月25日 第四十版 (2009年11月25日版原本がベース)
+     (1) retweet 関連 API (のうち、streaming API の retweet を除く) から、[まもなく登場] という注記を削除
+     (2) 「検索関連のAPI」の search の“geocode 引数”に「注意」を追加
+     (3) 「ステータス関連のAPI」の update に「位置情報(Geolocation, geotags)に関する注意」を追加
   2009年11月20日 第三十九版 (2009年11月19日版原本がベース)
      (1) 「タイムライン関連のAPI」の home_timeline の“応答例”を変更。“訳者による注記”に追記
      (2) 「list 関連のAPI」の POST lists (create), POST list id (update) に“description”引数を各々追加
