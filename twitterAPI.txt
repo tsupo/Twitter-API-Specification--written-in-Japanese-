@@ -1,7 +1,7 @@
-﻿Twitter API 仕様書         <!-- おまじない → --><title>Twitter API 仕様書 日本語訳 第四十版 (2009年11月25日版)</title><pre><!-- ← おまじない -->
+﻿Twitter API 仕様書         <!-- おまじない → --><title>Twitter API 仕様書 日本語訳 第四十一版 (2009年12月3日版)</title><pre><!-- ← おまじない -->
   日本語訳: tsupo (http://watcher.moe-nifty.com/  mailto:tsupo@na.rim.or.jp)
 
-  http://apiwiki.twitter.com/Twitter-API-Documentation の2009年11月25日版の大雑把な日本語訳
+  http://apiwiki.twitter.com/Twitter-API-Documentation の2009年11月29日版の大雑把な日本語訳
   (ただし、そのまま翻訳したわけではなく、一部、意訳。また、現時点の実装状況に合わせて、内容を修正している)
 
 
@@ -999,7 +999,7 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
 
           参考: 2009年7月1日以降、未登録のアプリケーションによる API 経由での投稿に関して、from web ではなく、from API と表示されるようになった
 
-     位置情報(Geolocation, geotags)に関する注意:
+     位置情報(Geo-tagging)に関する注意:
        ・geo_enabled の値が false [=disabled(使用しない)] に設定されているユーザの発言に位置情報が含まれる場合、その位置情報は無視される
        ・XML形式での応答では、位置情報に関して、GeoRSS 準拠の表現を使用する (GeoRSS については http://georss.org/Main_Page を参照)
        ・JSON形式での応答では、GeoJSON 準拠の表現を使用するが、現時点では、GeoJSON が
@@ -3667,6 +3667,8 @@ OAuth関連
     緯度経度情報を引数として指定可能な API に関して、今のところ、緯度経度情報関連の引数を指定しても無視される(だけで、エラーにはならない)
     緯度経度情報が応答に含まれる API に関して、今のところ、緯度経度情報は含まれていない
 
+    2009年11月29日版のAPI仕様書で、Geolocation という表記は Geo-tagging に変更(統一)された
+
 
   list 関連 API 群 (list 関連のAPI、list の登録内容に関する API、list の購読に関する API)
     従来の API では page と count の組み合わせでページングが行なわれているが、なぜか「list 関連 API 群」では page と per_page の組み合わせでページングが行なわれている。
@@ -3686,6 +3688,9 @@ OAuth関連
 
 
 変更履歴
+  2009年12月 3日 第四十一版 (2009年11月29日版原本がベース)
+     (1) 「ステータス関連のAPI」の update の「位置情報(Geolocation, geotags)に関する注意」を「位置情報(Geo-tagging)に関する注意」に変更
+     (2) 「備考」の“geolocation 関連”に追記
   2009年11月25日 第四十版 (2009年11月25日版原本がベース)
      (1) retweet 関連 API (のうち、streaming API の retweet を除く) から、[まもなく登場] という注記を削除
      (2) 「検索関連のAPI」の search の“geocode 引数”に「注意」を追加
