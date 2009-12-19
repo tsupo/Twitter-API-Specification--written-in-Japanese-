@@ -1,7 +1,7 @@
-﻿Twitter API 仕様書         <!-- おまじない → --><title>Twitter API 仕様書 日本語訳 第四十一版 (2009年12月3日版)</title><pre><!-- ← おまじない -->
+﻿Twitter API 仕様書         <!-- おまじない → --><title>Twitter API 仕様書 日本語訳 第四十二版 (2009年12月17日版)</title><pre><!-- ← おまじない -->
   日本語訳: tsupo (http://watcher.moe-nifty.com/  mailto:tsupo@na.rim.or.jp)
 
-  http://apiwiki.twitter.com/Twitter-API-Documentation の2009年11月29日版の大雑把な日本語訳
+  http://apiwiki.twitter.com/Twitter-API-Documentation の2009年12月17日版の大雑把な日本語訳
   (ただし、そのまま翻訳したわけではなく、一部、意訳。また、現時点の実装状況に合わせて、内容を修正している)
 
 
@@ -64,7 +64,7 @@
      favorites/create
      favorites/destroy
 
-  IM関連のAPI:
+  「指定デバイス」関連のAPI:
      notifications/follow
      notifications/leave
 
@@ -277,8 +277,7 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
      API制限:  適用対象 [訳者による注記: 一定時間あたりの同一IPアドレスからのリクエスト可能回数に上限がある。具体的な回数は不明]
 
      注意: public_timeline の取得結果は60秒間キャッシュされる。それよりも短い時間間隔で public_timeline を取得したい場合は
-           IM (Jabber Pubsub) を利用すること。[訳者による注記: Jabber Pubsub は1分間に400発言程度まで扱えることを目標にして
-           いるとのこと。つまり、それより発言数が多い場合は、Jabber Pubsub を使ってもとりこぼしが起きる]
+           「ストリーミングAPI」を利用すること。
 
      訳者による注記:
            since_id を指定しても無視されるようになった。仕様書原本からも since_id に関する説明が削除されている
@@ -657,7 +656,8 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
 
      URL: http://twitter.com/statuses/user_timeline.format
           http://twitter.com/statuses/user_timeline/id.format
-       (format は xml, json, rss, atom のうちのいずれかを指定)
+       (format は xml, json, rss, atom のうちのいずれかを指定。
+        xml または json 指定時は、取得結果に retweets は含まれない。 rss または atom 指定時は、取得結果に retweets が含まれる)
 
      引数:
         id=ユーザID または id=スクリーン名  (オプション)
@@ -985,11 +985,13 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
            投稿しようとしている発言に関する位置情報のうち、「緯度」を指定する
            -90.0 から +90.0 の範囲の値を指定する (正の値の場合「北緯」、負の値の場合「南緯」)
            範囲外の値を指定した場合、geo_enabled が disabled(使用しない) に設定されている場合、あるいはlong引数が指定されていない場合、本引数は無視される
+           緯度は小数点以下8桁まで指定可能
 
         long=経度 (オプション) [将来、指定可能になる予定]
            投稿しようとしている発言に関する位置情報のうち、「経度」を指定する
            -180.0 から +180.0 の範囲の値を指定する (正の値の場合「東経」、負の値の場合「西経」)
            範囲外の値を指定した場合、geo_enabled が disabled(使用しない) に設定されている場合、あるいはlat引数が指定されていない場合、本引数は無視される
+           経度は小数点以下8桁まで指定可能
 
         source=クライアント名 (オプション)
           ステータスの投稿に使用しているクライアント名を指定する。
@@ -1611,11 +1613,11 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
                  (この場合、101010 はユーザIDではなく、スクリーン名であることに注意)
 
         follow (オプション)
-          id引数で指定したユーザをfriendにすると同時に、そのユーザの発言を IM に送信するようにするかどうかを指定する
+          id引数で指定したユーザをfriendにすると同時に、そのユーザの発言を「指定デバイス」に送信するようにするかどうかを指定する
 
           例:
             http://twitter.com/friendships/create/bob.json?follow=true
-                スクリーン名 bob の人を friend にし、その発言を IM に送信するようにするリクエストを発行し、実行結果を JSON 形式で取得する
+                スクリーン名 bob の人を friend にし、その発言を「指定デバイス」に送信するようにするリクエストを発行し、実行結果を JSON 形式で取得する
 
      メソッド: POST
      API制限:  適用対象外
@@ -1683,7 +1685,7 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
      調査対象となる「関係」は
         following             (follow しているかどうか)
         followed_by           (follow されているかどうか)
-        notifications_enabled (IM での購読対象にしているかどうか)
+        notifications_enabled (「指定デバイス」での購読対象にしているかどうか)
      の3つ
 
      URL: http://twitter.com/friendships/show.format
@@ -1704,6 +1706,14 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
                 ユーザID 123 の人とユーザID 456 の人の間にどんな関係があるかどうか調べ、結果を XML 形式で取得する
             http://twitter.com/friendships/show.xml?source_id=bob&target_id=jack
                 スクリーン名 bob の人とスクリーン名 jack の人の間にどんな関係があるかどうか調べ、結果を XML 形式で取得する
+
+     応答:
+       - source_id も source_screen_name も指定することなく本APIを認証なしで使った場合は HTTP レスポンスコード 403 が返る
+       - 調査対象のうちの1人目(source)もしくは2人目(target)の少なくともどちらか一方のアカウントが存在しない場合、 HTTP レスポンスコード 404 が返る
+       - source が自分自身ではない場合、source 要素内の notifications_enabled 要素は空になる。一方、target 要素内の notifications_enabled 要素は常に空になる
+       - source が target をブロックしている場合、source が自分自身であれば、本APIの応答中の source 要素内に blocking 要素が含まれる
+         (source が自分自身ではない場合、本APIの応答に blocking 要素が含まれることはない)
+       - source と target が互いにフォローしあっている関係(あるいは、フォロー、被フォロー関係が全く存在しない状態)であっても、応答中の source 要素、target 要素の双方の内部に following 要素、followed_by 要素が含まれる
 
      メソッド: GET
      API制限:  適用対象
@@ -1902,11 +1912,11 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
 
      引数:
         device=sms, im, none のいずれかを指定 (必須)
-          SMS もしくは IM を使って最新の発言を取得したい場合に、本 API にて指定する
+          「指定デバイス」(SMS 等)を使って最新の発言を取得したい場合に、本 API にて指定する
 
              例:
                http://twitter.com/account/update_delivery_device?device=im
-                 IM で最新の発言を取得できるように設定する (注意: IM 側の設定も必要)
+                 「指定デバイス」で最新の発言を取得できるように設定する (注意: 「指定デバイス」側の設定も必要な場合がある)
 
      メソッド: POST
      API制限:  適用対象外
@@ -2076,10 +2086,10 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
      API制限:  適用対象外
 
 
-IM関連のAPI
+「指定デバイス」関連のAPI
 
   follow
-     指定ユーザ(following)の発言を IM に送信するようにする
+     指定ユーザ(following)の発言を「指定デバイス」に送信するようにする
      id, user_id, screen_name のいずれかの引数を必ず指定すること
 
      URL: http://twitter.com/notifications/follow/id.format
@@ -2087,27 +2097,27 @@ IM関連のAPI
 
      引数:
         id=ユーザID(またはスクリーン名) (オプション)
-           発言を IM に送信したいユーザの ID またはスクリーン名を指定する
+           発言を「指定デバイス」に送信したいユーザの ID またはスクリーン名を指定する
 
           例:
             http://twitter.com/notifications/follow/12345.xml
-                ユーザID 12345 の人の発言を IM に送信するようにする
+                ユーザID 12345 の人の発言を「指定デバイス」に送信するようにする
             http://twitter.com/notifications/follow/bob.json 
-                スクリーン名 bob の発言を IM に送信するようにする
+                スクリーン名 bob の発言を「指定デバイス」に送信するようにする
 
         user_id=ユーザID  (オプション)
-           指定した ID のユーザの発言を IM に送信するようにする
+           指定した ID のユーザの発言を「指定デバイス」に送信するようにする
 
            例:
              http://twitter.com/notificiations/follow.xml?user_id=1401881
-                 ユーザID 1401881 の発言を IM に送信するようにする
+                 ユーザID 1401881 の発言を「指定デバイス」に送信するようにする
 
         screen_name=スクリーン名  (オプション)
-           指定したスクリーン名のユーザの発言を IM に送信するようにする
+           指定したスクリーン名のユーザの発言を「指定デバイス」に送信するようにする
 
              例:
                http://twitter.com/notifications/follow.xml?screen_name=101010
-                 スクリーン名 101010 の発言を IM に送信するようにする
+                 スクリーン名 101010 の発言を「指定デバイス」に送信するようにする
                  (この場合、101010 はユーザIDではなく、スクリーン名であることに注意)
 
      メソッド: POST
@@ -2117,7 +2127,7 @@ IM関連のAPI
 
 
   leave
-     指定ユーザ(following)の発言を IM に送信するのをやめる
+     指定ユーザ(following)の発言を「指定デバイス」に送信するのをやめる
      id, user_id, screen_name のいずれかの引数を必ず指定すること
 
      URL: http://twitter.com/notifications/leave/id.format
@@ -2125,27 +2135,27 @@ IM関連のAPI
 
      引数:
         id=ユーザID(またはスクリーン名) (オプション)
-           発言を IM に送信するのをやめたいユーザの ID またはスクリーン名を指定する
+           発言を「指定デバイス」に送信するのをやめたいユーザの ID またはスクリーン名を指定する
 
           例:
             http://twitter.com/notifications/leave/12345.xml
-                ユーザID 12345 の人の発言を IM に送信するのをやめる
+                ユーザID 12345 の人の発言を「指定デバイス」に送信するのをやめる
             http://twitter.com/notifications/leave/bob.json 
-                スクリーン名 bob の発言を IM に送信するのをやめる
+                スクリーン名 bob の発言を「指定デバイス」に送信するのをやめる
 
         user_id=ユーザID  (オプション)
-           指定した ID のユーザの発言を IM に送信するのをやめる
+           指定した ID のユーザの発言を「指定デバイス」に送信するのをやめる
 
            例:
              http://twitter.com/notifications/leave.xml?user_id=1401881
-                 ユーザID 1401881 の発言を IM に送信するのをやめる
+                 ユーザID 1401881 の発言を「指定デバイス」に送信するのをやめる
 
         screen_name=スクリーン名  (オプション)
-           指定したスクリーン名のユーザの発言を IM に送信するのをやめる
+           指定したスクリーン名のユーザの発言を「指定デバイス」に送信するのをやめる
 
              例:
                http://twitter.com/notifications/leave.xml?screen_name=101010
-                 スクリーン名 101010 の発言を IM に送信するのをやめる
+                 スクリーン名 101010 の発言を「指定デバイス」に送信するのをやめる
                  (この場合、101010 はユーザIDではなく、スクリーン名であることに注意)
 
      メソッド: POST
@@ -2751,7 +2761,7 @@ list の購読に関する API
   DELETE list subscribers
      指定した list の購読を解除する
 
-     URL: http://api.twitter.com/1/user/list_id/members.format
+     URL: http://api.twitter.com/1/user/list_id/subscribers.format
        (format は xml, json のうちのいずれかを指定)
 
      引数:
@@ -3632,6 +3642,20 @@ OAuth関連
     すでに、かなり前から IM で Twitter を利用できなくなっている(復活の目処が立っていない?)ため、設定メニューも削除したものと思われる。
     そのため、IM関連のAPI(はまだ、存在し続けている)を実行しても、実質的な効果はない。
 
+    2009年12月、API仕様書上、IM関連のAPI、IM関連の引数等は、IM ではなく、「指定デバイス」(携帯電話の SMS など)関連の操作を実行するものへ変更された
+    (実装の方は、もっと早い時期に仕様変更されている可能性がある)
+    なお、現時点では「指定デバイス」として設定可能なものは SMS のみである
+      - 最初に、以下の番号にダイアルし、START というメッセージを送信することで、それ以降、(その携帯電話から)Twitter へ SMS 経由で発言を投稿できるようになる
+          アメリカ:         40404
+          カナダ:           21212
+          イギリス:         86444 (対応キャリア: Vodafone, Orange, 3, O2)
+          インド:           53000 (対応キャリア: Bharti Airtel)
+          インドネシア:     89887 (対応キャリア: AXIS)
+          アイルランド:     51210 (対応キャリア: O2)
+          ニュージーランド: 8987  (対応キャリア: Vodafone, Telecom NZ)
+      - SMS を「指定デバイス」として設定するには、SMS 経由で Twitter へ ON という発言を投稿する
+      - SMS を「指定デバイス」として使うのをやめる場合は、SMS 経由で Twitter へ OFF という発言を投稿する
+
 
   ハッシュタグ (hashtags)
     元々は、何に関する話題なのかを明示したり、検索しやすくしたりするという目的で、Twitter の発言に 「#タグ」を付ける習慣が英語圏を中心に広まり、やがて http://hashtags.org/ 等のタグ追跡・タグ検索サービスが提供されるようになった。
@@ -3688,6 +3712,19 @@ OAuth関連
 
 
 変更履歴
+  2009年12月17日 第四十二版 (2009年12月17日版原本がベース)
+     (1) 「ステータス関連のAPI」の update の“lat 引数”、“long 引数”に「小数点以下8桁まで有効」という記述を追加
+     (2) 「ステータス関連のAPI」の user_timeline の format に何を指定するかで取得結果に retweets が含まれる/含まれないかの説明を追加
+     (3) 「フレンド関連のAPI」の show に「応答」(に関する補足的な説明)を追加
+     (4) 「list 関連のAPI」の DELETE list subscribers の URL を修正 (API仕様書の記述が間違っていた)
+     (5) 「IM関連のAPI」を 「「指定デバイス」関連のAPI」に名称変更
+     (6) 上記(5)に関連して、
+           「フレンド関連のAPI」の create, show
+           「アカウント関連のAPI」の update_delivery_device
+           「「指定デバイス」関連のAPI」(旧「IM関連のAPI」)の follow, leave
+         のそれぞれの説明を変更
+     (7) 「備考」の“IM関連”に追記
+     (8) 「タイムライン関連のAPI」の public_timeline の「注意」を変更
   2009年12月 3日 第四十一版 (2009年11月29日版原本がベース)
      (1) 「ステータス関連のAPI」の update の「位置情報(Geolocation, geotags)に関する注意」を「位置情報(Geo-tagging)に関する注意」に変更
      (2) 「備考」の“geolocation 関連”に追記
