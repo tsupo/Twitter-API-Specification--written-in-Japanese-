@@ -1,7 +1,7 @@
-﻿Twitter API 仕様書         <!-- おまじない → --><title>Twitter API 仕様書 日本語訳 第四十二版 (2009年12月17日版)</title><pre><!-- ← おまじない -->
+﻿Twitter API 仕様書         <!-- おまじない → --><title>Twitter API 仕様書 日本語訳 第四十三版 (2010年2月17日版)</title><pre><!-- ← おまじない -->
   日本語訳: tsupo (http://watcher.moe-nifty.com/  mailto:tsupo@na.rim.or.jp)
 
-  http://apiwiki.twitter.com/Twitter-API-Documentation の2009年12月17日版の大雑把な日本語訳
+  http://apiwiki.twitter.com/Twitter-API-Documentation の2010年2月15日版の大雑把な日本語訳
   (ただし、そのまま翻訳したわけではなく、一部、意訳。また、現時点の実装状況に合わせて、内容を修正している)
 
 
@@ -27,7 +27,6 @@
   ユーザ情報関連のAPI:
      statuses/friends
      statuses/followers
-     statuses/featured
      users/show
      users/search
 
@@ -50,7 +49,6 @@
   アカウント関連のAPI:
      account/verify_credentials
      account/end_session
-     account/archive
      account/update_location
      account/update_delivery_device
      account/update_profile_colors
@@ -77,7 +75,6 @@
 
   補助API: 
      help/test
-     help/downtime_schedule
 
   spam 報告関連のAPI:
      report_spam
@@ -118,8 +115,8 @@
      trends/weekly
 
   地域情報検索関連のAPI:
-     trends/available         [まもなく登場]
-     trends/location          [まもなく登場]
+     trends/available
+     trends/location
 
   検索条件保存:
      saved_searches
@@ -134,7 +131,8 @@
      birddog
      shadow
      filter
-     retweet                  [まもなく登場]
+     links
+     retweet
 
 
 認証
@@ -147,6 +145,8 @@
   Webブラウザ等を経由して Twitter にログインしたときに発行される cookie を使うことで BASIC 認証の代わりにすることもできるが、公式には cookie を使っての API 実行はサポートしない。
   (訳者による注記: API によっては cookie 使用時も BASIC 認証が要求されるものもある。また、BASIC認証での API 実行と cookie を利用しての API 実行では、異なる結果が返る API もある。特に、protected なユーザに関する挙動に違いが見られる。
    OAuth 認証時も API の応答に cookie が含まれるが、次回 API 実行時にこの cookie をサーバへ送り返す必要はない)。
+
+  (2010年2月10日頃から)OAuth の簡易版的な認証方法として xAuth が導入された。主として、デスクトップクライアントで利用することを想定している。
 
 
 REST
@@ -211,6 +211,19 @@ API の実行回数制限
           - ダイレクトメッセージの送信: 1日最大1000件まで
           - following: 具体的な数字は明示されていない(1日最大2000件まで、らしい)
 
+   API 実行回数制限の緩和
+     (2010年1月から) OAuth 経由で新しい API エンドポイント (http://api.twitter.com/ で始まる URL) にアクセスする場合に限って、API を60分間に350回まで実行することができる
+     (訳者注: 緩和措置導入直後は60分間に450回まで実行可能だったが、2010年1月12日のハイチ地震発生時のサーバー負荷状況を考慮した結果、2010年1月24日以降、60分間に350回まで実行可能とすることにした模様。
+              将来的には、60分間に1500回まで実行可能にすることが予告されている)。
+     なお、この「緩和措置」が有効な状態でも rate_limit_status は、依然として hourly-limit の値として 150 を返す。
+     「緩和措置」が有効になっていることを確認するには、API 実行要求(httpリクエスト)に対する応答中のhttpレスポンスヘッダを見ればよい。
+     httpレスポンスヘッダ中の
+        X-RateLimit-Limit: 
+     が、60分間(1時間)に実行可能な回数を示し、
+        X-RateLimit-Remaining: 
+     が、あと何回実行可能なのかを示している。
+
+
 
 page/count 引数の制限
   最大 3200発言分相当の page/count を指定可能。実際に指定件数分取得できるかどうかは、制限の実施状況次第である。制限を越えて取得しようとした場合は、200 OK のステータスコードと空のレスポンス本体が返る。
@@ -254,6 +267,7 @@ API に変更があったことを知る方法
 
 Twitter を利用したアプリケーションに関する要望・苦情の送り先
   username@twitter.com (username 部分は Twitter のアカウント名) へメールを送ることで、指定したアカウント名のユーザにメールを送ることができる
+  (訳者注: username@twitter.com 形式のメールアドレスでメールが届く人と届かない人がいる模様。必ず届くという保証はないと考えた方がよい)
 
 
 タイムライン関連のAPI
@@ -263,6 +277,8 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
      この API を実行してから60秒間、応答結果がキャッシュされる(60秒以内に再度リクエストを行なった場合は、同一の応答が返る)
 
      URL: http://twitter.com/statuses/public_timeline.format
+       または
+          http://api.twitter.com/1/statuses/public_timeline.format
        (format は xml, json, rss, atom のうちのいずれかを指定)
 
      引数:
@@ -281,11 +297,12 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
 
      訳者による注記:
            since_id を指定しても無視されるようになった。仕様書原本からも since_id に関する説明が削除されている
-           2009年3月下旬から、profile_image_url要素で示される画像(ユーザアイコン)のURLがデフォルトのユーザアイコンのURL固定になっている(バグとして報告されているが、2009年4月14日現在、改修されていない)
+           2009年3月下旬から、profile_image_url要素で示される画像(ユーザアイコン)のURLがデフォルトのユーザアイコンのURL固定になっている(バグとして報告されているが、2009年4月14日現在、改修されていない → 改修済み)
 
 
   home_timeline
      自分と自分の friend の過去24時間以内に update されたステータス(retweetを含む)から最大20件(count引数使用時は最大200件)を取得する。
+     (home_timeline は、http://twitter.com/home で表示される timeline の内容に相当する)
 
      注意: friends_timeline との違い
        home_timeline には retweet が含まれるが、friends_timeline には retweet は含まれない
@@ -294,6 +311,8 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
        将来、friends_timeline は廃止し、home_timeline に一本化する予定
 
      URL: http://twitter.com/statuses/home_timeline.format
+       または
+          http://api.twitter.com/1/statuses/home_timeline.format
        (format は xml, json, atom のうちのいずれかを指定)
 
      引数:
@@ -301,30 +320,30 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
           指定したIDより大きな値のIDのステータスのみ取得する (指定したIDは取得対象外)
 
             例:
-               http://twitter.com/statuses/home_timeline.xml?since_id=12345
+               http://api.twitter.com/1/statuses/home_timeline.xml?since_id=12345
                  ステータスID 12345 以降に update された自分と自分の friend の発言(のうち、古いものから順に最大20件)を XML 形式で取得する
 
         max_id=ステータスID  (オプション)
           指定したステータスID以下の値のIDのステータスのみ取得する (指定したIDも取得対象内)
 
             例:
-               http://twitter.com/statuses/home_timeline.xml?max_id=54321
+               http://api.twitter.com/1/statuses/home_timeline.xml?max_id=54321
                  ステータスID 54321 以前に update された自分と自分の friend の発言(のうち、新しいもの最大20件)を XML 形式で取得する
 
         count=ステータス数 (オプション)
           指定した数のステータスを取得する。ステータス数は最大 200 まで指定可能
 
              例:
-               http://twitter.com/statuses/home_timeline.xml?count=5
-                自分の friend の最新の発言を5個取得する
+               http://api.twitter.com/1/statuses/home_timeline.xml?count=5
+                 自分の friend の最新の発言を5個取得する
 
         page=ページ番号 (オプション)
           (1ページを20件とみなしたときの)ページ番号を指定することで、過去の任意の発言を20件単位で取得する
           なお、この page オプションは、Twitter の負荷が高いとき等、一時的に使えないようにする(あるいは、指定可能なページ番号の最大値を制限する)ことがある
 
              例:
-               http://twitter.com/statuses/home_timeline.rss?page=3
-                 API実行時点で41件目から60件目に相当するステータスを RSS 形式で取得する
+               http://api.twitter.com/1/statuses/home_timeline.xml?page=3
+                 API実行時点で41件目から60件目に相当するステータスを XML 形式で取得する
 
      メソッド: GET
      API制限:  適用対象
@@ -580,6 +599,8 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
            RT @オリジナルの発言者のスクリーン名:
         という文字が付加されるようになった (他のタイムライン取得系APIや検索系APIの取得結果に「公式RT」が含まれる場合も同様)
 
+        「format は xml, json, atom のうちのいずれかを指定」ということになっているが、実際は rss も指定可能(RSS 2.0 形式で返ってくる)。
+
 
   friends_timeline
      自分の friend の過去24時間以内に update されたステータスから最大20件(count引数使用時は最大200件)を取得する。
@@ -587,6 +608,9 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
 
      URL: http://twitter.com/statuses/friends_timeline.format
           http://twitter.com/statuses/friends_timeline/id.format
+      または
+          http://api.twitter.com/1/statuses/friends_timeline.format
+          http://api.twitter.com/1/statuses/friends_timeline/id.format
        (format は xml, json, rss, atom のうちのいずれかを指定)
 
      引数:
@@ -656,6 +680,9 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
 
      URL: http://twitter.com/statuses/user_timeline.format
           http://twitter.com/statuses/user_timeline/id.format
+       または
+          http://api.twitter.com/1/statuses/user_timeline.format
+          http://api.twitter.com/1/statuses/user_timeline/id.format
        (format は xml, json, rss, atom のうちのいずれかを指定。
         xml または json 指定時は、取得結果に retweets は含まれない。 rss または atom 指定時は、取得結果に retweets が含まれる)
 
@@ -741,6 +768,8 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
      なお、現時点では、自分が他のユーザに対して行なった返信の一覧を取得する API は用意されていない。
 
      URL: http://twitter.com/statuses/replies.format
+       または
+          http://api.twitter.com/1/statuses/replies.format
        (format は xml, json, rss, atom のうちのいずれかを指定)
 
         page=ページ番号 (オプション)
@@ -785,11 +814,17 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
         2009年4月6日現在、この API は仕様書原本から削除され、代わりに mentions という名前の API が追加されている
         今のところ replies も使えるが、いずれは mentions の方しか使えなくなるのではないかと思われる
 
+        仕様変更時期は不明だが、冒頭以外のところに @ユーザ名 が含まれるステータスも取得結果に含まれるようになった(= mentions の結果と同一内容になった)
+
+        (2010年2月現在、http://api.twitter.com/1/statuses/replies.format という新しい形式のエンドポイントも機能している)
+
 
   mentions
      自分に対する言及(@ユーザ名 が含まれるステータス)の一覧を取得する (最大20件)
 
      URL: http://twitter.com/statuses/mentions.format
+       または
+          http://api.twitter.com/1/statuses/mentions.format
        (format は xml, json, rss, atom のうちのいずれかを指定)
 
         since_id=ステータスID  (オプション)
@@ -829,20 +864,22 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
      自分が投稿した retweet の一覧を取得する (最大20件)
 
      URL: http://twitter.com/statuses/retweeted_by_me.format
+       または
+          http://api.twitter.com/1/statuses/retweeted_by_me.format
        (format は xml, json, atom のうちのいずれかを指定)
 
         since_id=ステータスID  (オプション)
           指定したステータスIDより大きな値のIDの retweet を取得する (指定したIDは取得対象外)
 
              例:
-               http://twitter.com/statuses/retweeted_by_me.xml?since_id=12345
+               http://api.twitter.com/1/statuses/retweeted_by_me.xml?since_id=12345
                  ステータスID 12345 以降の retweet を XML 形式で取得する
 
         max_id=ステータスID  (オプション)
           指定したステータスID以下の値のIDの retweet を取得する (指定したIDも取得対象内)
 
              例:
-               http://twitter.com/statuses/retweeted_by_me.xml?max_id=54321
+               http://api.twitter.com/1/statuses/retweeted_by_me.xml?max_id=54321
                  ステータスID 54321 以前の retweet を XML 形式で取得する
 
         page=ページ番号 (オプション)
@@ -850,14 +887,14 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
           ただし、サーバ側で設定されている取得可能ページ数上限(サーバの運用状況次第で設定値は変わる)を超えての取得はできない
 
              例:
-               http://twitter.com/statuses/retweeted_by_me.xml?page=3
+               http://api.twitter.com/1/statuses/retweeted_by_me.xml?page=3
                  API実行時点で41件目から60件目に相当する retweet を XML 形式で取得する
 
         count=件数  (オプション)
           指定した件数分、retweet を取得する。ただし、200 より大きな値は指定できない 
 
              例:
-               http://twitter.com/statuses/retweeted_by_me.xml?count=5
+               http://api.twitter.com/1/statuses/retweeted_by_me.xml?count=5
                  最新の retweet を5件、XML 形式で取得する
 
      メソッド: GET
@@ -868,20 +905,22 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
      自分の friends が投稿した retweet の一覧を取得する (最大20件)
 
      URL: http://twitter.com/statuses/retweeted_to_me.format
+       または
+          http://api.twitter.com/1/statuses/retweeted_to_me.format
        (format は xml, json, atom のうちのいずれかを指定)
 
         since_id=ステータスID  (オプション)
           指定したステータスIDより大きな値のIDの retweet を取得する (指定したIDは取得対象外)
 
              例:
-               http://twitter.com/statuses/retweeted_to_me.xml?since_id=12345
+               http://api.twitter.com/1/statuses/retweeted_to_me.xml?since_id=12345
                  ステータスID 12345 以降の retweet を XML 形式で取得する
 
         max_id=ステータスID  (オプション)
           指定したステータスID以下の値のIDの retweet を取得する (指定したIDも取得対象内)
 
              例:
-               http://twitter.com/statuses/retweeted_to_me.xml?max_id=54321
+               http://api.twitter.com/1/statuses/retweeted_to_me.xml?max_id=54321
                  ステータスID 54321 以前の retweet を XML 形式で取得する
 
         page=ページ番号 (オプション)
@@ -889,14 +928,14 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
           ただし、サーバ側で設定されている取得可能ページ数上限(サーバの運用状況次第で設定値は変わる)を超えての取得はできない
 
              例:
-               http://twitter.com/statuses/retweeted_to_me.xml?page=3
+               http://api.twitter.com/1/statuses/retweeted_to_me.xml?page=3
                  API実行時点で41件目から60件目に相当する retweet を XML 形式で取得する
 
         count=件数  (オプション)
           指定した件数分、retweet を取得する。ただし、200 より大きな値は指定できない 
 
              例:
-               http://twitter.com/statuses/retweeted_to_me.xml?count=5
+               http://api.twitter.com/1/statuses/retweeted_to_me.xml?count=5
                  最新の retweet を5件、XML 形式で取得する
 
      メソッド: GET
@@ -907,20 +946,22 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
      自分が投稿した発言のうち(自分以外の)誰かによって retweet されたものの一覧を取得する (最大20件)
 
      URL: http://twitter.com/statuses/retweets_of_me.format
+       または
+          http://api.twitter.com/1/statuses/retweets_of_me.format
        (format は xml, json, atom のうちのいずれかを指定)
 
         since_id=ステータスID  (オプション)
           指定したステータスIDより大きな値のIDの retweet を取得する (指定したIDは取得対象外)
 
              例:
-               http://twitter.com/statuses/retweets_of_me.xml?since_id=12345
+               http://api.twitter.com/1/statuses/retweets_of_me.xml?since_id=12345
                  ステータスID 12345 以降の retweet を XML 形式で取得する
 
         max_id=ステータスID  (オプション)
           指定したステータスID以下の値のIDの retweet を取得する (指定したIDも取得対象内)
 
              例:
-               http://twitter.com/statuses/retweets_of_me.xml?max_id=54321
+               http://api.twitter.com/1/statuses/retweets_of_me.xml?max_id=54321
                  ステータスID 54321 以前の retweet を XML 形式で取得する
 
         page=ページ番号 (オプション)
@@ -928,14 +969,14 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
           ただし、サーバ側で設定されている取得可能ページ数上限(サーバの運用状況次第で設定値は変わる)を超えての取得はできない
 
              例:
-               http://twitter.com/statuses/retweets_of_me.xml?page=3
+               http://api.twitter.com/1/statuses/retweets_of_me.xml?page=3
                  API実行時点で41件目から60件目に相当する retweet を XML 形式で取得する
 
         count=件数  (オプション)
           指定した件数分、retweet を取得する。ただし、200 より大きな値は指定できない 
 
              例:
-               http://twitter.com/statuses/retweets_of_me.xml?count=5
+               http://api.twitter.com/1/statuses/retweets_of_me.xml?count=5
                  最新の retweet を5件、XML 形式で取得する
 
      メソッド: GET
@@ -947,6 +988,8 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
      指定した ID のステータス(1件)を取得する
 
      URL: http://twitter.com/statuses/show/id.format
+       または
+          http://api.twitter.com/1/statuses/show/id.format
        (format は xml, json のうちのいずれかを指定)
 
      引数:
@@ -969,12 +1012,15 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
      この API は必ず POST を使って発行すること。update が成功した場合は、format で指定した形式で応答が返る
 
      URL: http://twitter.com/statuses/update.format
+       または
+          http://api.twitter.com/1/statuses/update.format
        (format は xml, json のうちのいずれかを指定)
 
      引数:
         status=ステータス  (必須)
           ステータス(発言、投稿内容)を指定する。必ず URL エンコードすること。
-          ステータスは 160文字以内におさめること。ただし、140文字を超えた部分は必ずしも表示される保証はない。
+          ステータスは 140文字以内におさめること。
+          140文字を超えるステータスを投稿しようとした場合は、単純に無視される(エラーコードは返らない。代わりに、最後に投稿することに成功したステータスのIDが返る。将来、エラーコードを返すようにする予定)
 
         in_reply_to_status_id=ステータスID (オプション)
            返信(reply)対象のステータスIDを指定する。どのステータスに対する返信か明示するのに使用する。
@@ -1003,6 +1049,7 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
 
      位置情報(Geo-tagging)に関する注意:
        ・geo_enabled の値が false [=disabled(使用しない)] に設定されているユーザの発言に位置情報が含まれる場合、その位置情報は無視される
+       ・小数点は「.」を使う。「,」を小数点として使う文化圏の人は注意してほしい。Twitter では「,」は緯度と経度を分けるセパレータとして使用している
        ・XML形式での応答では、位置情報に関して、GeoRSS 準拠の表現を使用する (GeoRSS については http://georss.org/Main_Page を参照)
        ・JSON形式での応答では、GeoJSON 準拠の表現を使用するが、現時点では、GeoJSON が
             "coordinates":[経度, 緯度]
@@ -1030,12 +1077,20 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
      訳者による注記:
         2007年4月はじめごろまでは GET でも構わなかった。現在は、GET は使えなくなっている
 
+        企業のアカウント等、同一アカウントを複数人で使う場合(組織アカウント)、実際に投稿したのは誰かを明示したい場合、contributors 引数を使って、投稿者の Twitter アカウント(組織アカウントとは別に取得した投稿者個人の Twitter アカウント)を指定することができる。
+           contributors=ユーザID
+           contributors=ユーザID1,ユーザID2,……,ユーザIDn
+        (まだ、この機能はベータ版であり、どの組織アカウントでも使えるわけではない。ベータテスト参加中の特定の組織アカウントでのみ、使用可能)
+        この contributors 引数を使用して投稿を行なった例が http://twitter.com/twitterapi/status/7680619122 である
+
 
   destroy
      ステータスを削除する。ステータスIDの指定は必須。
      削除が成功した場合は、format で指定した形式で応答が返る
 
      URL: http://twitter.com/statuses/destroy/id.format
+       または
+          http://api.twitter.com/1/statuses/destroy/id.format
        (format は xml, json のうちのいずれかを指定)
 
      引数:
@@ -1057,6 +1112,8 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
      retweet が成功した場合は、format で指定した形式で応答(retweet 元のステータスと、retweet 結果)が返る
 
      URL: http://twitter.com/statuses/retweet/id.format
+       または
+          http://api.twitter.com/1/statuses/retweet/id.format
        (format は xml, json のうちのいずれかを指定)
 
      引数:
@@ -1064,7 +1121,7 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
            retweet したいステータスのIDを指定する
 
           例:
-            http://twitter.com/statuses/retweet/123.xml
+            http://api.twitter.com/1/statuses/retweet/123.xml
                 ステータスID 123 のステータスを retweet し、実行結果を XML 形式で受け取る
 
      メソッド: POST または PUT
@@ -1081,6 +1138,8 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
      指定したステータスを retweet しているユーザの一覧のうち最初の100人分を取得する
 
      URL: http://twitter.com/statuses/retweets/id.format
+       または
+          http://api.twitter.com/1/statuses/retweets/id.format
        (format は xml, json のうちのいずれかを指定)
 
      引数:
@@ -1088,14 +1147,14 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
            retweet しているユーザの一覧を取得したいステータスのIDを指定する
 
           例:
-            http://twitter.com/statuses/retweets/4012738147.xml
+            http://api.twitter.com/1/statuses/retweets/4012738147.xml
                 ステータスID 4012738147 のステータスを retweet しているユーザの一覧(最大100人分)を XML 形式で受け取る
 
         count=件数  (オプション)
           指定した件数分、retweet しているユーザの一覧を取得する。ただし、100 より大きな値は指定できない
 
           例:
-            http://twitter.com/statuses/retweets/4012738147.xml?count=5
+            http://api.twitter.com/1/statuses/retweets/4012738147.xml?count=5
                 ステータスID 4012738147 のステータスを retweet しているユーザの一覧(5人分)を XML 形式で受け取る
 
      メソッド: GET
@@ -1110,6 +1169,8 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
      ただし、この API で取得できるデータは最大100件(100人分)である
 
      URL: http://twitter.com/statuses/friends.format
+       または
+          http://api.twitter.com/1/statuses/friends.format
        (format は xml, json のうちのいずれかを指定)
 
      引数:
@@ -1193,6 +1254,8 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
      自分の follower の一覧を(各 follower の最新ステータス付きで)取得する
 
      URL: http://twitter.com/statuses/followers.format
+       または
+          http://api.twitter.com/1/statuses/followers.format
        (format は xml, json のうちのいずれかを指定)
 
      引数:
@@ -1259,20 +1322,6 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
         2009年9月(24日ごろ?)に cursor 引数が導入されたのに伴い、page 引数も仕様書原本から削除された
 
 
-  featured
-     現在、Twitter に login 中のユーザの一覧を(最新ステータス付きで)取得する(最大20人分)
-
-     URL: http://twitter.com/statuses/featured.format 
-       (format は xml, json のうちのいずれかを指定)
-
-     メソッド: GET
-     API制限:  適用対象
-
-     訳者による注記:
-        Twitter に login 中であっても、BASIC 認証でのアクセスが要求される
-        2009年1月9日現在、この API は使えなくなっている (API仕様書原本からも削除されている)
-
-
   show
      指定ユーザに関する詳細な情報を取得する。
      ただし、指定ユーザが自分の friend でない場合、この API の実行は失敗する("You are not authorized to see this user." という応答が返る)。
@@ -1280,6 +1329,8 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
      id, user_id, screen_name のいずれかの引数を必ず指定すること
 
      URL: http://twitter.com/users/show/id.format
+       または
+          http://api.twitter.com/1/users/show/id.format
        (format は xml, json のうちのいずれかを指定)
 
      引数:
@@ -1414,6 +1465,8 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
     自分宛てのダイレクトメッセージの一覧を取得する (最大20件)
 
     URL: http://twitter.com/direct_messages.format
+      または
+         http://api.twitter.com/1/direct_messages.format
        (format は xml, json, rss, atom のうちのいずれかを指定)
 
      引数:
@@ -1483,6 +1536,8 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
     自分が送信したダイレクトメッセージの一覧を取得する (最大20件)
 
     URL: http://twitter.com/direct_messages/sent.format
+      または
+         http://api.twitter.com/1/direct_messages/sent.format
        (format は xml, json のうちのいずれかを指定)
 
      引数:
@@ -1534,189 +1589,201 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
 
 
   new
-     ダイレクトメッセージを送信する。宛先と本文の指定は必須。
-     この API は必ず POST を使って発行すること。送信が成功した場合は、format で指定した形式で応答が返る
+    ダイレクトメッセージを送信する。宛先と本文の指定は必須。
+    この API は必ず POST を使って発行すること。送信が成功した場合は、format で指定した形式で応答が返る
 
-     URL: http://twitter.com/direct_messages/new.format
+    URL: http://twitter.com/direct_messages/new.format
+      または
+         http://api.twitter.com/1/direct_messages/new.format
        (format は xml, json のうちのいずれかを指定)
 
-     引数:
-        user=ユーザID または user=スクリーン名  (必須)
-           ダイレクトメッセージの宛先を指定する
+    引数:
+       user=ユーザID または user=スクリーン名  (必須)
+          ダイレクトメッセージの宛先を指定する
 
-           user 引数の代わりに、以下の引数のどちらかを使うこともできる
-             screen_name=スクリーン名
-             user_id=ユーザID
+          user 引数の代わりに、以下の引数のどちらかを使うこともできる
+            screen_name=スクリーン名
+            user_id=ユーザID
 
-        text=本文  (必須)
-           ダイレクトメッセージの本文を指定する。必ず URL エンコードすること。本文は140文字以内におさめること。
+       text=本文  (必須)
+          ダイレクトメッセージの本文を指定する。必ず URL エンコードすること。本文は140文字以内におさめること。
 
-     メソッド: POST
-     API制限:  適用対象外
-               ただし、一定時間辺りの実行回数上限が設定されている
-                 1日辺り  1000回まで (API による実行以外に、Web での送信、モバイルでの送信、SMSでの送信もカウント対象)
-               上限に到達すると、それ以降は 403 エラーが返るようになる
+    メソッド: POST
+    API制限:  適用対象外
+              ただし、一定時間辺りの実行回数上限が設定されている
+                1日辺り  1000回まで (API による実行以外に、Web での送信、モバイルでの送信、SMSでの送信もカウント対象)
+              上限に到達すると、それ以降は 403 エラーが返るようになる
 
   destroy
-     ダイレクトメッセージを削除する。メッセージIDの指定は必須。
-     削除が成功した場合は、format で指定した形式で応答が返る
+    ダイレクトメッセージを削除する。メッセージIDの指定は必須。
+    削除が成功した場合は、format で指定した形式で応答が返る
 
-     URL: http://twitter.com/direct_messages/destroy/id.format
+    URL: http://twitter.com/direct_messages/destroy/id.format
+      または
+         http://api.twitter.com/1/direct_messages/destroy/id.format
        (format は xml, json のうちのいずれかを指定)
 
-     引数:
-        id=メッセージID  (必須)
-           削除したいダイレクトメッセージのIDを指定する
+    引数:
+       id=メッセージID  (必須)
+          削除したいダイレクトメッセージのIDを指定する
 
-          例:
-            http://twitter.com/direct_messages/destroy/12345.json
-                メッセージID 12345 のダイレクトメッセージを削除し、実行結果を JSON 形式で受け取る
-            http://twitter.com/direct_messages/destroy/23456.xml
-                メッセージID 23456 のダイレクトメッセージを削除し、実行結果を XML 形式で受け取る
+         例:
+           http://twitter.com/direct_messages/destroy/12345.json
+               メッセージID 12345 のダイレクトメッセージを削除し、実行結果を JSON 形式で受け取る
+           http://twitter.com/direct_messages/destroy/23456.xml
+               メッセージID 23456 のダイレクトメッセージを削除し、実行結果を XML 形式で受け取る
 
-     メソッド: POST または DELETE
-     API制限:  適用対象外
+    メソッド: POST または DELETE
+    API制限:  適用対象外
 
 
 フレンド関連のAPI
 
   create
-     指定ユーザを自分の friend (following) にする
-     id, user_id, screen_name のいずれかの引数を必ず指定すること
+    指定ユーザを自分の friend (following) にする
+    id, user_id, screen_name のいずれかの引数を必ず指定すること
 
-     URL: http://twitter.com/friendships/create/id.format
+    URL: http://twitter.com/friendships/create/id.format
+      または
+         http://api.twitter.com/1/friendships/create/id.format
        (format は xml, json のうちのいずれかを指定)
 
-     引数:
-        id=ユーザID または id=スクリーン名  (オプション)
-           friend にしたいユーザを指定する
+    引数:
+       id=ユーザID または id=スクリーン名  (オプション)
+          friend にしたいユーザを指定する
+
+         例:
+           http://twitter.com/friendships/create/12345.json
+               ユーザID 12345 の人を friend にするリクエストを発行し、実行結果を JSON 形式で取得する
+           http://twitter.com/friendships/create/bob.xml
+               スクリーン名 bob の人を friend にするリクエストを発行し、実行結果を XML 形式で取得する
+
+       user_id=ユーザID  (オプション)
+          指定した ID のユーザを friend にする
 
           例:
-            http://twitter.com/friendships/create/12345.json
-                ユーザID 12345 の人を friend にするリクエストを発行し、実行結果を JSON 形式で取得する
-            http://twitter.com/friendships/create/bob.xml
-                スクリーン名 bob の人を friend にするリクエストを発行し、実行結果を XML 形式で取得する
+            http://twitter.com/friendships/create.xml?user_id=1401881
+                ユーザID 1401881 を friend にする
 
-        user_id=ユーザID  (オプション)
-           指定した ID のユーザを friend にする
+       screen_name=スクリーン名  (オプション)
+          指定したスクリーン名のユーザを friend にする
 
-           例:
-             http://twitter.com/friendships/create.xml?user_id=1401881
-                 ユーザID 1401881 を friend にする
+            例:
+              http://twitter.com/friendships/create.xml?screen_name=101010
+                スクリーン名 101010 を friend にする
+                (この場合、101010 はユーザIDではなく、スクリーン名であることに注意)
 
-        screen_name=スクリーン名  (オプション)
-           指定したスクリーン名のユーザを friend にする
+       follow (オプション)
+         id引数で指定したユーザをfriendにすると同時に、そのユーザの発言を「指定デバイス」に送信するようにするかどうかを指定する
 
-             例:
-               http://twitter.com/friendships/create.xml?screen_name=101010
-                 スクリーン名 101010 を friend にする
-                 (この場合、101010 はユーザIDではなく、スクリーン名であることに注意)
+         例:
+           http://twitter.com/friendships/create/bob.json?follow=true
+               スクリーン名 bob の人を friend にし、その発言を「指定デバイス」に送信するようにするリクエストを発行し、実行結果を JSON 形式で取得する
 
-        follow (オプション)
-          id引数で指定したユーザをfriendにすると同時に、そのユーザの発言を「指定デバイス」に送信するようにするかどうかを指定する
-
-          例:
-            http://twitter.com/friendships/create/bob.json?follow=true
-                スクリーン名 bob の人を friend にし、その発言を「指定デバイス」に送信するようにするリクエストを発行し、実行結果を JSON 形式で取得する
-
-     メソッド: POST
-     API制限:  適用対象外
-               ただし、一定時間辺りの実行回数上限が設定されている
-                 1日辺り  1000回まで (API による実行以外に、Web での実行、モバイルでの実行もカウント対象)
-               上限に到達すると、それ以降は 403 エラーが返るようになる
+    メソッド: POST
+    API制限:  適用対象外
+              ただし、一定時間辺りの実行回数上限が設定されている
+                1日辺り  1000回まで (API による実行以外に、Web での実行、モバイルでの実行もカウント対象)
+              上限に到達すると、それ以降は 403 エラーが返るようになる
 
 
   destroy
-     指定ユーザを自分の friend (following) から外す
-     id, user_id, screen_name のいずれかの引数を必ず指定すること
+    指定ユーザを自分の friend (following) から外す
+    id, user_id, screen_name のいずれかの引数を必ず指定すること
 
-     URL: http://twitter.com/friendships/destroy/id.format
+    URL: http://twitter.com/friendships/destroy/id.format
+      または
+         http://api.twitter.com/1/friendships/destroy/id.format
        (format は xml, json のうちのいずれかを指定)
 
-     引数:
-        id=ユーザID または id=スクリーン名  (オプション)
-           friend から外したいユーザを指定する
+    引数:
+       id=ユーザID または id=スクリーン名  (オプション)
+          friend から外したいユーザを指定する
+
+         例:
+           http://twitter.com/friendships/destroy/12345.json
+               ユーザID 12345 の人を friend から外すリクエストを発行し、実行結果を JSON 形式で取得する
+           http://twitter.com/friendships/destroy/bob.xml
+               スクリーン名 bob の人を friend から外すリクエストを発行し、実行結果を XML 形式で取得する
+
+       user_id=ユーザID  (オプション)
+          指定した ID のユーザを friend から外す
 
           例:
-            http://twitter.com/friendships/destroy/12345.json
-                ユーザID 12345 の人を friend から外すリクエストを発行し、実行結果を JSON 形式で取得する
-            http://twitter.com/friendships/destroy/bob.xml
-                スクリーン名 bob の人を friend から外すリクエストを発行し、実行結果を XML 形式で取得する
+            http://twitter.com/friendships/destroy.xml?user_id=1401881
+                ユーザID 1401881 を friend から外す
 
-        user_id=ユーザID  (オプション)
-           指定した ID のユーザを friend から外す
+       screen_name=スクリーン名  (オプション)
+          指定したスクリーン名のユーザを friend から外す
 
-           例:
-             http://twitter.com/friendships/destroy.xml?user_id=1401881
-                 ユーザID 1401881 を friend から外す
+            例:
+              http://twitter.com/friendships/destroy.xml?screen_name=101010
+                スクリーン名 101010 を friend から外す
+                (この場合、101010 はユーザIDではなく、スクリーン名であることに注意)
 
-        screen_name=スクリーン名  (オプション)
-           指定したスクリーン名のユーザを friend から外す
-
-             例:
-               http://twitter.com/friendships/destroy.xml?screen_name=101010
-                 スクリーン名 101010 を friend から外す
-                 (この場合、101010 はユーザIDではなく、スクリーン名であることに注意)
-
-     メソッド: POST または DELETE
-     API制限:  適用対象外
+    メソッド: POST または DELETE
+    API制限:  適用対象外
 
 
-   exists
-     指定した2ユーザの間の friend 関係を調べる
+  exists
+    指定した2ユーザの間の friend 関係を調べる
 
-     URL: http://twitter.com/friendships/exists.format
+    URL: http://twitter.com/friendships/exists.format
+      または
+         http://api.twitter.com/1/friendships/exists.format
        (format は xml, json のうちのいずれかを指定)
 
-     引数:
-        user_a=調査対象のうち1人目のユーザID または スクリーン名  (必須)
-        user_b=調査対象のうち2人目のユーザID または スクリーン名  (必須)
+    引数:
+       user_a=調査対象のうち1人目のユーザID または スクリーン名  (必須)
+       user_b=調査対象のうち2人目のユーザID または スクリーン名  (必須)
 
-          例:
-            http://twitter.com/friendships/exists.xml?user_a=alice&user_b=bob
-                スクリーン名 alice の人と bob の人の間に friend 関係があるかどうか調べ、結果を XML 形式で取得する
+         例:
+           http://twitter.com/friendships/exists.xml?user_a=alice&user_b=bob
+               スクリーン名 alice の人と bob の人の間に friend 関係があるかどうか調べ、結果を XML 形式で取得する
 
-     メソッド: GET
-     API制限:  適用対象
+    メソッド: GET
+    API制限:  適用対象
 
 
-   show
-     指定した2ユーザの間の関係を詳細に調べる
-     調査対象となる「関係」は
-        following             (follow しているかどうか)
-        followed_by           (follow されているかどうか)
-        notifications_enabled (「指定デバイス」での購読対象にしているかどうか)
-     の3つ
+  show
+    指定した2ユーザの間の関係を詳細に調べる
+    調査対象となる「関係」は
+       following             (follow しているかどうか)
+       followed_by           (follow されているかどうか)
+       notifications_enabled (「指定デバイス」での購読対象にしているかどうか)
+    の3つ
 
-     URL: http://twitter.com/friendships/show.format
+    URL: http://twitter.com/friendships/show.format
+      または
+         http://api.twitter.com/1/friendships/show.format
        (format は xml, json のうちのいずれかを指定)
 
-     引数:
-       以下の引数のうち、どちらか1つを指定する (認証なしで本APIを使う場合は必須。認証ありの場合はオプション)
-         source_id=調査対象のうち1人目のユーザID
-         source_screen_name=調査対象のうち1人目のスクリーン名
-           認証ありの場合、上記引数を省略した場合は、調査対象の「1人目のユーザ」は自分自身になる
+    引数:
+      以下の引数のうち、どちらか1つを指定する (認証なしで本APIを使う場合は必須。認証ありの場合はオプション)
+        source_id=調査対象のうち1人目のユーザID
+        source_screen_name=調査対象のうち1人目のスクリーン名
+          認証ありの場合、上記引数を省略した場合は、調査対象の「1人目のユーザ」は自分自身になる
 
-       以下の引数のうち、どちらか1つを指定する (必須)
-         target_id=調査対象のうち2人目のユーザID
-         target_screen_name=調査対象のうち2人目のスクリーン名
+      以下の引数のうち、どちらか1つを指定する (必須)
+        target_id=調査対象のうち2人目のユーザID
+        target_screen_name=調査対象のうち2人目のスクリーン名
 
-          例:
-            http://twitter.com/friendships/show.xml?source_id=123&target_id=456
-                ユーザID 123 の人とユーザID 456 の人の間にどんな関係があるかどうか調べ、結果を XML 形式で取得する
-            http://twitter.com/friendships/show.xml?source_id=bob&target_id=jack
-                スクリーン名 bob の人とスクリーン名 jack の人の間にどんな関係があるかどうか調べ、結果を XML 形式で取得する
+         例:
+           http://twitter.com/friendships/show.xml?source_id=123&target_id=456
+               ユーザID 123 の人とユーザID 456 の人の間にどんな関係があるかどうか調べ、結果を XML 形式で取得する
+           http://twitter.com/friendships/show.xml?source_id=bob&target_id=jack
+               スクリーン名 bob の人とスクリーン名 jack の人の間にどんな関係があるかどうか調べ、結果を XML 形式で取得する
 
-     応答:
-       - source_id も source_screen_name も指定することなく本APIを認証なしで使った場合は HTTP レスポンスコード 403 が返る
-       - 調査対象のうちの1人目(source)もしくは2人目(target)の少なくともどちらか一方のアカウントが存在しない場合、 HTTP レスポンスコード 404 が返る
-       - source が自分自身ではない場合、source 要素内の notifications_enabled 要素は空になる。一方、target 要素内の notifications_enabled 要素は常に空になる
-       - source が target をブロックしている場合、source が自分自身であれば、本APIの応答中の source 要素内に blocking 要素が含まれる
-         (source が自分自身ではない場合、本APIの応答に blocking 要素が含まれることはない)
-       - source と target が互いにフォローしあっている関係(あるいは、フォロー、被フォロー関係が全く存在しない状態)であっても、応答中の source 要素、target 要素の双方の内部に following 要素、followed_by 要素が含まれる
+    応答:
+      - source_id も source_screen_name も指定することなく本APIを認証なしで使った場合は HTTP レスポンスコード 403 が返る
+      - 調査対象のうちの1人目(source)もしくは2人目(target)の少なくともどちらか一方のアカウントが存在しない場合、 HTTP レスポンスコード 404 が返る
+      - source が自分自身ではない場合、source 要素内の notifications_enabled 要素は空になる。一方、target 要素内の notifications_enabled 要素は常に空になる
+      - source が target をブロックしている場合、source が自分自身であれば、本APIの応答中の source 要素内に blocking 要素が含まれる
+        (source が自分自身ではない場合、本APIの応答に blocking 要素が含まれることはない)
+      - source と target が互いにフォローしあっている関係(あるいは、フォロー、被フォロー関係が全く存在しない状態)であっても、応答中の source 要素、target 要素の双方の内部に following 要素、followed_by 要素が含まれる
 
-     メソッド: GET
-     API制限:  適用対象
+    メソッド: GET
+    API制限:  適用対象
 
 
 
@@ -1726,6 +1793,8 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
      自分の、あるいは指定したユーザが follow しているユーザ(friends)のID一覧(配列)を取得する
 
      URL: http://twitter.com/friends/ids.format
+       または
+          http://api.twitter.com/1/friends/ids.format
        (format は xml, json のうちのいずれかを指定)
 
      引数:
@@ -1761,14 +1830,35 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
                http://twitter.com/friends/ids/barackobama.xml?page=1
                  スクリーン名 barackobama が follow しているユーザのID一覧のうち、最初の5000件を XML 形式で取得する
 
+        cursor=-1 または cursor=カーソル位置  (必須[になる予定。現在は、オプション])
+          指定した(データベースの)カーソル位置以降のユーザID一覧を5000件分(1ページ分)取得する
+          -1 を指定した場合、先頭からの5000件分を取得する。
+          応答本体に next_cursor がある場合は、「次のページ」(のカーソル位置)、previous_cursor がある場合は、「前のページ」(のカーソル位置)がそれぞれ存在することを示す。
+          本APIの次回実行時に、この next_cursor や previous_cursor の示すカーソル位置を使用することで、ユーザID一覧の「次のページ」や「前のページ」相当分(5000件分)を取得することができる。
+          (サーバが負荷集中状態の場合等、必ずしも5000件取得できる保証はない)
+
+          cursor 引数を省略した場合、全ユーザ(friends)のID一覧を返す(タイムアウトが発生するか、不完全な一覧が返る可能性が高い)
+          [将来、上記のcursor 引数省略時の挙動は廃止し、cursor 引数の指定を必須とする予定]
+
+             例:
+               http://twitter.com/friends/ids/barackobama.xml?cursor=-1
+                 スクリーン名 barackobama が follow しているユーザのID一覧のうち、最初の5000件を XML 形式で取得する
+               http://twitter.com/friends/ids/barackobama.xml?cursor=-1300794057949944903
+                 スクリーン名 barackobama が follow しているユーザのID一覧のうち、カーソル位置 -1300794057949944903 以降の5000件を XML 形式で取得する
+
      メソッド: GET
      API制限:  適用対象
 
+     訳者による注記:
+        2010年1月(4日ごろ?)に cursor 引数が導入されたのに伴い、page 引数も仕様書原本から削除された
+        friends の中に「アカウント停止中のユーザ(suspended users)」が含まれる場合、5000件より少ない件数の一覧が返る
 
   followers/ids
      自分を、あるいは指定したユーザを follow しているユーザ(followers)のID一覧(配列)を取得する
 
      URL: http://twitter.com/followers/ids.format
+       または
+          http://api.twitter.com/1/followers/ids.format
        (format は xml, json のうちのいずれかを指定)
 
      引数:
@@ -1804,8 +1894,28 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
                http://twitter.com/followers/ids/oprah.xml?page=1
                  スクリーン名 oprah を follow しているユーザのID一覧のうち、最初の5000件を XML 形式で取得する
 
+        cursor=-1 または cursor=カーソル位置  (必須[になる予定。現在は、オプション])
+          指定した(データベースの)カーソル位置以降のユーザID一覧を5000件分(1ページ分)取得する
+          -1 を指定した場合、先頭からの5000件分を取得する。
+          応答本体に next_cursor がある場合は、「次のページ」(のカーソル位置)、previous_cursor がある場合は、「前のページ」(のカーソル位置)がそれぞれ存在することを示す。
+          本APIの次回実行時に、この next_cursor や previous_cursor の示すカーソル位置を使用することで、ユーザID一覧の「次のページ」や「前のページ」相当分(5000件分)を取得することができる。
+          (サーバが負荷集中状態の場合等、必ずしも5000件取得できる保証はない)
+
+          cursor 引数を省略した場合、全ユーザ(followers)のID一覧を返す(タイムアウトが発生するか、不完全な一覧が返る可能性が高い)
+          [将来、上記のcursor 引数省略時の挙動は廃止し、cursor 引数の指定を必須とする予定]
+
+             例:
+               http://twitter.com/followers/ids/barackobama.xml?cursor=-1
+                 スクリーン名 barackobama を follow しているユーザのID一覧のうち、最初の5000件を XML 形式で取得する
+               http://twitter.com/followers/ids/barackobama.xml?cursor=-1300794057949944903
+                 スクリーン名 barackobama を follow しているユーザのID一覧のうち、カーソル位置 -1300794057949944903 以降の5000件を XML 形式で取得する
+
      メソッド: GET
      API制限:  適用対象
+
+     訳者による注記:
+        2010年1月(4日ごろ?)に cursor 引数が導入されたのに伴い、page 引数も仕様書原本から削除された
+        followers の中に「アカウント停止中のユーザ(suspended users)」が含まれる場合、5000件より少ない件数の一覧が返る
 
 
 アカウント関連のAPI
@@ -1817,6 +1927,8 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
      この API は認証情報(BASIC認証で使うユーザ名とパスワードの組み合わせ)が有効かどうかを確認するのに利用することができる
 
      URL: http://twitter.com/account/verify_credentials.format
+       または
+          http://api.twitter.com/1/account/verify_credentials.format
              (format は xml, json のうちのいずれかを指定。もしくは何も指定しない)
 
      メソッド: GET
@@ -1828,6 +1940,7 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
 
      訳者による注記:
        本 API で使用する(BASIC認証で指定する)ユーザ名はメールアドレスでも、スクリーン名でも可。
+       すでにセッション確立状態(ログイン中)のときに本APIを実行すると、単に、当該ユーザに関する情報が返るだけである
 
 
   end_session
@@ -1835,6 +1948,8 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
      この API はウィジェットのようなクライアントで簡易ログイン/ログアウトを実現する目的で使うことを想定している
 
      URL: http://twitter.com/account/end_session.format
+       または
+          http://api.twitter.com/1/account/end_session.format
              (format は xml, json のうちのいずれかを指定。もしくは何も指定しない)
 
      メソッド: POST
@@ -1843,45 +1958,6 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
      訳者による注記:
        実際には、中身の入っている cookie が返ってくる
        また、http://twitter.com/login にリダイレクトされる
-
-
-  archive
-    自分の最新の発言80件を取得する。取得結果は発言日時の降順で格納される
-
-     URL: http://twitter.com/account/archive.format
-       (format は xml, json のうちのいずれかを指定)
-
-     引数:
-        page=ページ番号 (オプション)
-          (1ページを80件とみなしたときの)ページ番号を指定することで、過去の任意の発言を80件単位で取得する
-
-             例:
-               http://twitter.com/account/archive.xml?page=2 
-                 API実行時点で81件目から160件目に相当する自分の発言を XML 形式で取得する
-
-        since=日時  (オプション)
-          指定した日時以降の発言を取得する
-          日時のフォーマットは RFC822(の「5.  日付と時刻仕様」) に従う
-          なお、本オプションの代わりに http リクエストヘッダで
-            If-Modified-Since
-          を明示することで、日時を指定することもできる
-
-             例:
-               http://twitter.com/account/archive.xml?since=Tue%2C+27+Mar+2007+22%3A55%3A48+GMT
-                 2007年3月27日22時55分48秒GMT以降の発言を(のうち新しいもの最大80件)を XML 形式で取得する
-
-        since_id=ステータスID  (オプション)
-          指定したIDより大きな値のIDの発言を最大80件取得する
-
-             例:
-               http://twitter.com/account/archive.xml?since_id=12345
-                 メッセージID 12345 以降の発言(のうち、古いものから順に最大80件)を XML 形式で取得する
-
-     メソッド: GET
-     API制限:  適用対象
-
-     訳者による注記:
-        2009年1月9日現在、この API は使えなくなっている (API仕様書原本からも削除されている)
 
 
   update_location
@@ -1903,19 +1979,25 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
      メソッド: POST
      API制限:  適用対象外
 
+     訳者による注記:
+        2010年2月16日現在、この API は使えなくなっている (API仕様書原本からも削除されている)
+
 
   update_delivery_device
     自分の device を設定する
 
      URL: http://twitter.com/account/update_delivery_device.format
+       または
+          http://api.twitter.com/1/account/update_delivery_device.format
        (format は xml, json のうちのいずれかを指定)
 
      引数:
-        device=sms, im, none のいずれかを指定 (必須)
+        device=sms, none のいずれかを指定 (必須)
           「指定デバイス」(SMS 等)を使って最新の発言を取得したい場合に、本 API にて指定する
+           none を指定すると、本 API 実行完了時点で、device が使えなくなる(device 経由での投稿もできなくなる)
 
              例:
-               http://twitter.com/account/update_delivery_device?device=im
+               http://twitter.com/account/update_delivery_device?device=sms
                  「指定デバイス」で最新の発言を取得できるように設定する (注意: 「指定デバイス」側の設定も必要な場合がある)
 
      メソッド: POST
@@ -1926,6 +2008,8 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
      Twitter 上の自分の profile ページの色を設定する
 
      URL: http://twitter.com/account/update_profile_colors.format
+       または
+          http://api.twitter.com/1/account/update_profile_colors.format
        (format は xml, json のうちのいずれかを指定)
 
      引数:
@@ -1945,6 +2029,8 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
      画像は multipart/form-data 形式のデータとして送信すること
 
      URL: http://twitter.com/account/update_profile_image.format
+       または
+          http://api.twitter.com/1/account/update_profile_image.format
        (format は xml, json のうちのいずれかを指定)
 
      引数:
@@ -1961,6 +2047,8 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
      画像は multipart/form-data 形式のデータとして送信すること
 
      URL: http://twitter.com/account/update_profile_background_image.format
+       または
+          http://api.twitter.com/1/account/update_profile_background_image.format
        (format は xml, json のうちのいずれかを指定)
 
      引数:
@@ -1974,9 +2062,11 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
 
   rate_limit_status
     自分の「API 制限状況」(この1時間以内にあと何回APIを実行できるか)を取得する。本APIの実行自体はAPI制限の対象外である(何回でも実行できる)
-    ただし、このAPIを BASIC 認証なしで実行した場合は、API 実行要求元のIPアドレスを対象とした「API 制限状況」が返る
+    ただし、このAPIを認証なしで実行した場合は、API 実行要求元のIPアドレスを対象とした「API 制限状況」が返る
 
      URL: http://twitter.com/account/rate_limit_status.format
+       または
+          http://api.twitter.com/1/account/rate_limit_status.format
        (format は xml, json のうちのいずれかを指定)
 
      引数:
@@ -1989,11 +2079,20 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
       XML の場合
             <?xml version="1.0" encoding="UTF-8"?>
             <hash>
-              <remaining-hits type="integer">6</remaining-hits>
-              <hourly-limit type="integer">20</hourly-limit>
-              <reset-time-in-seconds type="integer">1214817685</reset-time-in-seconds>
-              <reset-time type="datetime">2008-06-30T09:21:25+00:00</reset-time>
+              <remaining-hits type="integer">19933</remaining-hits>
+              <hourly-limit type="integer">20000</hourly-limit>
+              <reset-time type="datetime">2009-04-08T21:57:23+00:00</reset-time>
+              <reset-time-in-seconds type="integer">1239227843</reset-time-in-seconds>
             </hash>
+
+            (上記の例は、ホワイトリスト登録者の場合。1時間に2万回実行可能になっていることがわかる)
+
+     訳者による注記:
+       2010年1月のAPI実行可能回数緩和措置導入以降も、本APIの返す「API 制限状況」は、緩和措置導入前の値になっている。
+       実際の「API 制限状況」を知りたい場合、各 API 実行(httpリクエスト発行)時に返ってくる httpレスポンスのヘッダ中の
+          X-RateLimit-Limit:       hourly-limit  に相当する値
+          X-RateLimit-Remaining:   remaining-hits に相当する値
+       等、X-RateLimit- で始まる名前のものを参照する必要がある。
 
 
   update_profile
@@ -2001,6 +2100,8 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
     引数はすべてオプションであるが、少なくとも1つは指定する必要がある
 
      URL: http://twitter.com/account/update_profile.format
+       または
+          http://api.twitter.com/1/account/update_profile.format
        (format は xml, json のうちのいずれかを指定)
 
      引数:
@@ -2023,6 +2124,8 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
     自分または指定したユーザの favorites(お気に入り) に登録されている「発言」のうち、最新のものから最大20件取得する
 
     URL: http://twitter.com/favorites.format
+       または
+          http://api.twitter.com/1/favorites.format
        (format は xml, json, rss, atom のうちのいずれかを指定)
 
      引数:
@@ -2050,6 +2153,8 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
      指定ステータスを自分の「お気に入り」に登録する。
 
      URL: http://twitter.com/favorites/create/id.format
+       または
+          http://api.twitter.com/1/favorites/create/id.format
        (format は xml, json のうちのいずれかを指定)
 
      引数:
@@ -2070,6 +2175,8 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
      指定ステータスを自分の「お気に入り」から外す。
 
      URL: http://twitter.com/favorites/destroy/id.format
+       または
+          http://api.twitter.com/1/favorites/destroy/id.format
        (format は xml, json のうちのいずれかを指定)
 
      引数:
@@ -2093,6 +2200,8 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
      id, user_id, screen_name のいずれかの引数を必ず指定すること
 
      URL: http://twitter.com/notifications/follow/id.format
+       または
+          http://api.twitter.com/1/notifications/follow/id.format
        (formats は xml, json のうちのいずれかを指定)
 
      引数:
@@ -2131,6 +2240,8 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
      id, user_id, screen_name のいずれかの引数を必ず指定すること
 
      URL: http://twitter.com/notifications/leave/id.format
+       または
+          http://api.twitter.com/1/notifications/leave/id.format
        (formats は xml, json のうちのいずれかを指定)
 
      引数:
@@ -2171,6 +2282,8 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
      id, user_id, screen_name のいずれかの引数を必ず指定すること
 
      URL: http://twitter.com/blocks/create/id.format
+       または
+          http://api.twitter.com/1/blocks/create/id.format
        (format は xml, json のうちのいずれかを指定)
 
      引数:
@@ -2207,6 +2320,8 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
      id, user_id, screen_name のいずれかの引数を必ず指定すること
 
      URL: http://twitter.com/blocks/destroy/id.format
+       または
+          http://api.twitter.com/1/blocks/destroy/id.format
        (format は xml, json のうちのいずれかを指定)
 
      引数:
@@ -2246,6 +2361,8 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
      id, user_id, screen_name のいずれかの引数を必ず指定すること
 
      URL: http://twitter.com/blocks/exists/id.format
+       または
+          http://api.twitter.com/1/blocks/exists/id.format
        (format は xml, json のうちのいずれかを指定)
 
      引数:
@@ -2279,6 +2396,8 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
      自分がブロックしているユーザの一覧を取得する
 
      URL: http://twitter.com/blocks/blocking.format
+       または
+          http://api.twitter.com/1/blocks/blocking.format
        (format は xml, json のうちのいずれかを指定)
 
      引数:
@@ -2297,6 +2416,8 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
      自分がブロックしているユーザのID一覧(配列)を取得する
 
      URL: http://twitter.com/blocks/blocking/ids.format
+       または
+          http://api.twitter.com/1/blocks/blocking/ids.format
        (format は xml, json のうちのいずれかを指定)
 
      引数:
@@ -2309,8 +2430,11 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
 補助API
   test
      成功すれば(Twitter が正常に稼動していれば)、"ok" という文字列を http ステータスコード 200 OK で返す
+     (xml 形式の場合、実際には <ok>true</ok> が返る)
 
      URL: http://twitter.com/help/test.format
+       または
+          http://api.twitter.com/1/help/test.format
        (format は xml, json のうちのいずれかを指定)
 
      引数:
@@ -2318,22 +2442,6 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
 
      メソッド: GET
      API制限:  適用対象外
-
-
-  downtime_schedule
-     Twitter のメインテナンスが予定されるときに http://twitter.com/home に表示されるのと同じ文字列を指定formatで返す
-
-     URL: http://twitter.com/help/downtime_schedule.format
-       (format は xml, json のうちのいずれかを指定)
-
-     引数:
-        なし
-
-     メソッド: GET
-     API制限:  適用対象外
-
-     訳者による注記:
-        2009年1月21日現在、この API は使えなくなっている (API仕様書原本からも削除されている)
 
 
 spam 報告関連のAPI
@@ -2342,6 +2450,8 @@ spam 報告関連のAPI
      id, user_id, screen_name のいずれかの引数を必ず指定すること
 
      URL: http://twitter.com/report_spam.format
+       または
+          http://api.twitter.com/1/report_spam.format
        (format は xml, json のうちのいずれかを指定)
 
      引数:
@@ -2843,6 +2953,19 @@ OAuth関連
   参考: http://twitter.com/oauth_clients/ にアクセスすると、自分が登録したアプリケーションの一覧が表示されます(すでに登録したアプリケーションがある人のみ)。
         一方、http://twitter.com/account/connections にアクセスすると、自分がアクセス許可を与えたアプリケーションの一覧が表示されます。
 
+        2010年2月から、OAuth の簡易版的な位置づけの xAuth という認証方式も使えるようになっています。主として、デスクトップアプリケーションで使用することを想定しています。
+        xAuth による API 実行手順は、以下のようになります。
+
+          (1) ユーザのスクリーン名(またはメールアドレス)とパスワード、OAuth の consumer key, consumer secret を使って、アクセストークン(token2 と token2 secret)を取得する
+          (2) 以後、consumer key, consumer secret, token2, token2 secret を使って、API を実行する
+
+        従来の OAuth に比べて大幅に手順が簡略化されています。ブラウザを間に挟むことなく、アプリケーション内で認証手順が完結するので、ユーザ側が実際に操作する手順も簡単になっています。
+        ただし、ユーザのパスワードを預かる必要が発生するため、セキュリティ的には、OAuth より劣ることになります。
+
+        また、OAuth の代わりに xAuth を採用しても、依然として、consumer secret を何らかの方法でアプリケーションと一緒に配布する必要がある(アプリケーションの実行形式内に consumer secret を暗号化して埋め込む、アプリケーション提供者側で用意した Web サイトから consumer secret を取得する、等)ため、consumer secret を第三者に盗用されてしまう危険性が存在します。
+        Webアプリケーションの場合でも、ソースコードを公開、配布するときに、consumer secret をどうするかという問題があります。
+        Twitter では、同一アプリケーション(ソースコード)であっても、実際に使用する consumer key, consumer secret をユーザ各自で取得して使用するようにすると、別のアプリケーションとして認識されるため、同一アプリケーションとして認識させたい(「from アプリケーション名」のアプリケーション名を統一したい)場合に困ります。
+
 
   oauth/request_token
     リクエストトークンを取得する
@@ -2940,6 +3063,36 @@ OAuth関連
 
      メソッド: GET
      API制限:  適用対象外
+
+     参考:
+       xAuth の場合は、以下の引数を使う
+
+          x_auth_username (必須)
+            Twitter のユーザ名(スクリーン名またはメールアドレス)
+
+          x_auth_password (必須)
+            Twitter のパスワード
+
+          x_auth_mode (必須)
+            常に client_auth を指定する
+
+          oauth_consumer_key (必須)
+            アプリケーションの consumer key
+
+          oauth_nonce (必須)
+            ランダムな適当な長さの文字列。使用可能な文字は ASCII コードの 0x21 ～ 0x7F の範囲内で printable なもの。
+
+          oauth_signature_method (必須)
+            署名方式。Twitter では常に HMAC-SHA1 を指定する
+
+          oauth_timestamp (必須)
+            本リクエストを実行するための処理を開始した日時(タイムスタンプ)。協定世界時(UTC)で指定する
+
+          oauth_version (オプション)
+            適用する OAuth のバージョン。Twitter では常に 1.0 を指定する
+
+          oauth_signature (必須)
+            上記パラメータ(x_auth_username ～ oauth_version)等を元に生成した文字列を、『「アプリケーションの consumer secret(を URL エンコードしたもの)」と「oauth/request_token で取得した token secret(を URL エンコードしたもの)」を '&' で連結したもの』を暗号鍵として HMAC-SHA1 方式で生成した署名を BASE64 エンコードしたもの
 
 
 検索関連のAPI
@@ -3172,7 +3325,7 @@ OAuth関連
 
 
 地域情報検索関連のAPI
-  trends/available         [まもなく登場]
+  trends/available
     ホットな話題が存在する地域の情報(配列)を取得する
     引数で緯度、経度を指定した場合は、その地点に近い順に並び替えた「ホットな話題が存在する地域の情報(配列)」が返る
 
@@ -3204,7 +3357,7 @@ OAuth関連
        ・取得できる件数は最大何件なのか、今のところ不明
 
 
-  trends/location          [まもなく登場]
+  trends/location
     WOEID で指定した地点の付近のホットな情報を取得する (最大10件)
     なお、取得結果は5分間キャッシュされる (5分以内に同じ引数で本APIを実行した場合は、前回実行時と同じ結果が返る)
 
@@ -3390,8 +3543,9 @@ OAuth関連
         - ベストエフォート
         - 順序不同
         - 通常、1回取得した情報は、もう二度と取得できない
-        - 現行の版はアルファテスト版
 
+        今のところ、ストリーミングAPIは、英語で投稿された status に関してしか、テストを行なっていない。英語以外の言語で投稿された status に関しては何らかの不具合が発生する可能性がある
+        場合によっては、ストリーミングAPIを使うより、「検索関連のAPI」を定期的に実行する方が、期待する結果を得られる可能性が高い
 
   firehose
     public な情報を全て取得する。 (REST API の statuses/public_timeline の「応答」中の status 要素に相当するものがストリームとして流れてくる)
@@ -3575,8 +3729,23 @@ OAuth関連
      制限: なし (["restricted track"契約や"partner track"契約が必要なものを除き]誰でも実行可能)
 
 
-  retweet [まもなく登場]
-    retweet されているステータスをすべて取得する (まだ、現時点では retweet ストリームは用意されていないので、本 API は利用不可)
+  links   [非公開]
+    http: または https: を含むステータスをすべて取得する
+
+     URL: http://stream.twitter.com/1/statuses/links.format
+       (format は xml, json のうちのいずれかを指定)
+
+     引数:
+        delimited=データ長
+          「応答」中の「ステータス」の大きさが常に一定値になるように指定する。「データ長」の単位はバイト。
+          実際の「ステータス」が指定したデータ長に満たない場合、足りない分は改行(\n)で埋められる。ただし、各「ステータス」の間に、keep-alive により挿入される復帰改行が含まれることがあるので、注意すること。
+
+     メソッド: GET
+     制限: links ストリームは一般公開されていない
+
+
+  retweet [非公開]
+    retweet されているステータスをすべて取得する
 
      URL: http://stream.twitter.com/1/statuses/retweet.format
        (format は xml, json のうちのいずれかを指定)
@@ -3587,7 +3756,7 @@ OAuth関連
           実際の「ステータス」が指定したデータ長に満たない場合、足りない分は改行(\n)で埋められる。ただし、各「ステータス」の間に、keep-alive により挿入される復帰改行が含まれることがあるので、注意すること。
 
      メソッド: GET
-     制限: 許可されたユーザのみ実行可能 (契約が必要)
+     制限: retweet ストリームは一般公開されていない
 
 
 
@@ -3712,9 +3881,35 @@ OAuth関連
 
 
 変更履歴
+  2010年 2月17日 第四十三版 (2010年2月15日版原本がベース)
+     (1) 「地域情報検索関連のAPI」(全2件)から、[まもなく登場] という注記を削除
+     (2) 「認証」に xAuth に関する記述を追加
+     (3) 「API の実行回数制限」に“API実行回数制限の緩和”を追加
+     (4) 「Twitter を利用したアプリケーションに関する要望・苦情の送り先」に注記を追加
+     (5) http://api.twitter.com/ で始まる新しい API エンドポイントが利用可能な API については、新しいエンドポイントも併記した
+         (「OAuth関連」のAPI以外は、新しい API エンドポイントが使えることを確認している)
+     (6) 「タイムライン関連のAPI」の home_timeline の注記に追記
+     (7) 「タイムライン関連のAPI」の replies の注記に追記
+     (8) 「ステータス関連のAPI」の“status 引数”の説明を変更 (140文字を超えるステータスを投稿しようとした場合の挙動)
+     (9) 「ステータス関連のAPI」の「位置情報」に小数点に関する注意を追加
+    (10) 「ステータス関連のAPI」の update の注記に追記 (contributors 引数)
+    (11) 「ユーザ情報関連のAPI」の featured を削除
+    (12) 「ソーシャルグラフ関連のAPI」の friends/ids に“cursor 引数”を追加
+    (13) 「ソーシャルグラフ関連のAPI」の friends/ids に「訳者による注記」を追加
+    (14) 「ソーシャルグラフ関連のAPI」の followers/ids に“cursor 引数”を追加
+    (15) 「ソーシャルグラフ関連のAPI」の followers/ids に「訳者による注記」を追加
+    (14) 「アカウント関連のAPI」の archive を削除
+    (15) 「アカウント関連のAPI」の update_delivery_device の“device 引数”の説明を変更
+    (16) 「アカウント関連のAPI」の rate_limit_status に「訳者による注記」を追加
+    (17) 「補助API」の downtime_schedule を削除
+    (18) 「OAuth 関連」の“参考”に xAuth に関する説明を追加
+    (19) 「OAuth 関連」の oauth/access_token に“参考”を追加し、xAuth に関する説明を記述
+    (20) 「ストリーミングAPI」の「サービスの品質」を更新
+    (21) 「ストリーミングAPI」に links を追加
+    (22) 「ストリーミングAPI」の retweet の説明を変更 ([まもなく登場] → [非公開])
   2009年12月17日 第四十二版 (2009年12月17日版原本がベース)
      (1) 「ステータス関連のAPI」の update の“lat 引数”、“long 引数”に「小数点以下8桁まで有効」という記述を追加
-     (2) 「ステータス関連のAPI」の user_timeline の format に何を指定するかで取得結果に retweets が含まれる/含まれないかの説明を追加
+     (2) 「タイムライン関連のAPI」の user_timeline の format に何を指定するかで取得結果に retweets が含まれる/含まれないかの説明を追加
      (3) 「フレンド関連のAPI」の show に「応答」(に関する補足的な説明)を追加
      (4) 「list 関連のAPI」の DELETE list subscribers の URL を修正 (API仕様書の記述が間違っていた)
      (5) 「IM関連のAPI」を 「「指定デバイス」関連のAPI」に名称変更
@@ -3765,8 +3960,8 @@ OAuth関連
      (2) 「spam 報告関連のAPI」の項目を新設し、report_spam を追加
      (3) 「ブロック関連のAPI」の create に“user_id 引数”と“screen_name 引数”を追加。“id 引数”の説明を変更
      (4) 「ブロック関連のAPI」の destroy に“user_id 引数”と“screen_name 引数”を追加。“id 引数”の説明を変更
-     (5) 「ステータス関連のAPI」の friends_timeline の“訳者による注記”に “id 引数”に関する補足を追記
-     (6) 「ステータス関連のAPI」の home_timeline に“訳者による注記”を追加
+     (5) 「タイムライン関連のAPI」の friends_timeline の“訳者による注記”に “id 引数”に関する補足を追記
+     (6) 「タイムライン関連のAPI」の home_timeline に“訳者による注記”を追加
      (7) 「アカウント関連のAPI」の verify_credentials の説明を修正(現在の仕様に合ったものに変更)
      (8) 「アカウント関連のAPI」の update_profile の“email 引数”を削除
      (9) 「ストリーミングAPI」の spritzer を sample に名称変更し、説明も変更
