@@ -1,7 +1,7 @@
-﻿Twitter API 仕様書         <!-- おまじない → --><title>Twitter API 仕様書 日本語訳 第四十三版 (2010年2月17日版)</title><pre><!-- ← おまじない -->
+﻿Twitter API 仕様書         <!-- おまじない → --><title>Twitter API 仕様書 日本語訳 第四十四版 (2010年2月20日版)</title><pre><!-- ← おまじない -->
   日本語訳: tsupo (http://watcher.moe-nifty.com/  mailto:tsupo@na.rim.or.jp)
 
-  http://apiwiki.twitter.com/Twitter-API-Documentation の2010年2月15日版の大雑把な日本語訳
+  http://apiwiki.twitter.com/Twitter-API-Documentation の2010年2月17日版の大雑把な日本語訳
   (ただし、そのまま翻訳したわけではなく、一部、意訳。また、現時点の実装状況に合わせて、内容を修正している)
 
 
@@ -3383,6 +3383,8 @@ OAuth関連
     (検索条件は、Web からの検索実行時に保存することができる他、saved_searches/create の実行により保存することができる)
 
      URL: http://twitter.com/saved_searches.format
+      または
+          http://api.twitter.com/1/saved_searches.format
        (format は xml, json のうちのいずれかを指定)
 
      引数:
@@ -3411,6 +3413,8 @@ OAuth関連
     IDで指定した「(自分の)保存済みの検索条件」を返す
 
      URL: http://twitter.com/saved_searches/show/id.format
+      	または
+          http://api.twitter.com/1/saved_searches/show/id.format
        (format は xml, json のうちのいずれかを指定)
 
      引数:
@@ -3430,6 +3434,8 @@ OAuth関連
     指定した「検索条件」を保存する
 
      URL: http://twitter.com/saved_searches/create.format
+      または
+          http://api.twitter.com/1/saved_searches/create.format
        (format は xml, json のうちのいずれかを指定)
 
      引数:
@@ -3461,7 +3467,9 @@ OAuth関連
   saved_searches/destroy
     指定した「保存済み検索条件」を破棄する
 
-     URL: http://twitter.com/saved_searches/create.format
+     URL: http://twitter.com/saved_searches/destroy.format
+      または
+          http://api.twitter.com/1/saved_searches/destroy.format
        (format は xml, json のうちのいずれかを指定)
 
      引数:
@@ -3510,7 +3518,7 @@ OAuth関連
 
         *ステータス削除通知
            ストリームには「ステータスの削除」に関する通知も含まれる。削除通知を受け取った場合は、過去ログから該当するステータスを速やかに削除して欲しい
-           該当するステータスより先に削除通知が到着することもあるので注意(その場合は、該当するステータスがが到着した時点で(蓄積せずに)削除して欲しい)
+           該当するステータスより先に削除通知が到着することもあるので注意(その場合は、該当するステータスが到着した時点で(蓄積せずに)削除して欲しい)
            削除通知のフォーマットは以下の通り
              - XML の場合: <delete><status><id>1234</id><user_id>3</user_id></status></delete>
              - JSONの場合: { "delete": { "status": { "id": 1234, "user_id": 3 } } }
@@ -3869,8 +3877,17 @@ OAuth関連
 
   API の URL の新しい体系
     「lists 関連 API 群」、「地域情報検索関連のAPI」では、API の URL が  http://api.twitter.com/ で始まるものになっている。
-     今後追加される API は、http://api.twitter.com/ で始まる URL に統一されるのかもしれない。
-     例えば、retweet 関連 API が正式に公開されたとき、http://api.twitter.com/ で始まる URL を使うよう、仕様変更される可能性がある
+     今後、API は、http://api.twitter.com/ で始まる URL に統一される予定。
+
+     2010年1月以降、一部の API を除き、ほぼ全部の API で http://api.twitter.com/ で始まる URL を使えるようになった。
+     この新しい形式の URL (エンドポイント) を OAuth 経由で使用することで、API 実行回数制限の緩和を享受することができる。
+
+        http://api.twitter.com/1/ で始まるエンドポイント: 現行バージョン
+        http://api.twitter.com/2/ で始まるエンドポイント: 次期バージョン(Twitter API version 2)
+
+     2010年2月17日版の仕様書原本で、REST API のうち、「OAuth 関連」以外の全 API が http://api.twitter.com/ で始まる URL に統一された。
+     (従来の http://twitter.com/ で始まる URL も、いまのところ問題なく使える)
+     なお、(仕様書原本では「REST API」とは別枠扱いの)「検索関連の API」は、まだ、従来の URL のままである。
 
 
   その他
@@ -3881,6 +3898,10 @@ OAuth関連
 
 
 変更履歴
+  2010年 2月20日 第四十四版 (2010年2月17日版原本がベース)
+     (1) 「検索条件保存」の各APIにも http://api.twitter.com/ で始まる新しい API エンドポイントを併記
+     (2) 「ストリーミング API」の説明中の typo を修正
+     (3) 「備考」の“API の URL の新しい体系”を現在の内容に合わせて修正、追記
   2010年 2月17日 第四十三版 (2010年2月15日版原本がベース)
      (1) 「地域情報検索関連のAPI」(全2件)から、[まもなく登場] という注記を削除
      (2) 「認証」に xAuth に関する記述を追加
