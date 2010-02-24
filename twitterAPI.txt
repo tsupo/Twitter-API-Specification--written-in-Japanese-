@@ -1,4 +1,4 @@
-﻿Twitter API 仕様書         <!-- おまじない → --><title>Twitter API 仕様書 日本語訳 第四十四版 (2010年2月20日版)</title><pre><!-- ← おまじない -->
+﻿Twitter API 仕様書         <!-- おまじない → --><title>Twitter API 仕様書 日本語訳 第四十五版 (2010年2月24日版)</title><pre><!-- ← おまじない -->
   日本語訳: tsupo (http://watcher.moe-nifty.com/  mailto:tsupo@na.rim.or.jp)
 
   http://apiwiki.twitter.com/Twitter-API-Documentation の2010年2月17日版の大雑把な日本語訳
@@ -3061,38 +3061,43 @@ OAuth関連
         oauth_signature (必須)
           上記パラメータ(oauth_consumer_key ～ oauth_version)等を元に生成した文字列を、『「アプリケーションの consumer secret(を URL エンコードしたもの)」と「oauth/request_token で取得した token secret(を URL エンコードしたもの)」を '&' で連結したもの』を暗号鍵として HMAC-SHA1 方式で生成した署名を BASE64 エンコードしたもの
 
-     メソッド: GET
+     メソッド: POST (訳者注: GET でも問題なく通ってしまう)
      API制限:  適用対象外
 
      参考:
-       xAuth の場合は、以下の引数を使う
+       xAuth の場合は、SSL (https) を使う
+          https://twitter.com/oauth/access_token
+        または
+          https://api.twitter.com/oauth/access_token
 
-          x_auth_username (必須)
-            Twitter のユーザ名(スクリーン名またはメールアドレス)
+          引数は以下の通り
 
-          x_auth_password (必須)
-            Twitter のパスワード
+             x_auth_username (必須)
+               Twitter のユーザ名(スクリーン名またはメールアドレス)
 
-          x_auth_mode (必須)
-            常に client_auth を指定する
+             x_auth_password (必須)
+               Twitter のパスワード
 
-          oauth_consumer_key (必須)
-            アプリケーションの consumer key
+             x_auth_mode (必須)
+               常に client_auth を指定する
 
-          oauth_nonce (必須)
-            ランダムな適当な長さの文字列。使用可能な文字は ASCII コードの 0x21 ～ 0x7F の範囲内で printable なもの。
+             oauth_consumer_key (必須)
+               アプリケーションの consumer key
 
-          oauth_signature_method (必須)
-            署名方式。Twitter では常に HMAC-SHA1 を指定する
+             oauth_nonce (必須)
+               ランダムな適当な長さの文字列。使用可能な文字は ASCII コードの 0x21 ～ 0x7F の範囲内で printable なもの。
 
-          oauth_timestamp (必須)
-            本リクエストを実行するための処理を開始した日時(タイムスタンプ)。協定世界時(UTC)で指定する
+             oauth_signature_method (必須)
+               署名方式。Twitter では常に HMAC-SHA1 を指定する
 
-          oauth_version (オプション)
-            適用する OAuth のバージョン。Twitter では常に 1.0 を指定する
+             oauth_timestamp (必須)
+               本リクエストを実行するための処理を開始した日時(タイムスタンプ)。協定世界時(UTC)で指定する
 
-          oauth_signature (必須)
-            上記パラメータ(x_auth_username ～ oauth_version)等を元に生成した文字列を、『「アプリケーションの consumer secret(を URL エンコードしたもの)」と「oauth/request_token で取得した token secret(を URL エンコードしたもの)」を '&' で連結したもの』を暗号鍵として HMAC-SHA1 方式で生成した署名を BASE64 エンコードしたもの
+             oauth_version (オプション)
+               適用する OAuth のバージョン。Twitter では常に 1.0 を指定する
+
+             oauth_signature (必須)
+               上記パラメータ(x_auth_username ～ oauth_version)等を元に生成した文字列を、『「アプリケーションの consumer secret(を URL エンコードしたもの)」と「oauth/request_token で取得した token secret(を URL エンコードしたもの)」を '&' で連結したもの』を暗号鍵として HMAC-SHA1 方式で生成した署名を BASE64 エンコードしたもの
 
 
 検索関連のAPI
@@ -3898,6 +3903,8 @@ OAuth関連
 
 
 変更履歴
+  2010年 2月24日 第四十五版 (2010年2月17日版原本がベース)
+     (1)「OAuth 関連」の oauth/access_token の“メソッド”を修正し、“訳者注”を追加。xAuth の説明を更新
   2010年 2月20日 第四十四版 (2010年2月17日版原本がベース)
      (1) 「検索条件保存」の各APIにも http://api.twitter.com/ で始まる新しい API エンドポイントを併記
      (2) 「ストリーミング API」の説明中の typo を修正
