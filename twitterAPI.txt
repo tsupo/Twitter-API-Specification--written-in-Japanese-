@@ -1,7 +1,7 @@
-﻿Twitter API 仕様書         <!-- おまじない → --><title>Twitter API 仕様書 日本語訳 第四十五版 (2010年2月24日版)</title><pre><!-- ← おまじない -->
+﻿Twitter API 仕様書         <!-- おまじない → --><title>Twitter API 仕様書 日本語訳 第四十六版 (2010年2月26日版)</title><pre><!-- ← おまじない -->
   日本語訳: tsupo (http://watcher.moe-nifty.com/  mailto:tsupo@na.rim.or.jp)
 
-  http://apiwiki.twitter.com/Twitter-API-Documentation の2010年2月17日版の大雑把な日本語訳
+  http://apiwiki.twitter.com/Twitter-API-Documentation の2010年2月25日版の大雑把な日本語訳
   (ただし、そのまま翻訳したわけではなく、一部、意訳。また、現時点の実装状況に合わせて、内容を修正している)
 
 
@@ -1020,7 +1020,7 @@ Twitter を利用したアプリケーションに関する要望・苦情の送
         status=ステータス  (必須)
           ステータス(発言、投稿内容)を指定する。必ず URL エンコードすること。
           ステータスは 140文字以内におさめること。
-          140文字を超えるステータスを投稿しようとした場合は、単純に無視される(エラーコードは返らない。代わりに、最後に投稿することに成功したステータスのIDが返る。将来、エラーコードを返すようにする予定)
+          140文字を超えるステータスを投稿しようとした場合は、単純に無視される(エラーコードは返らない。代わりに、最後に投稿することに成功したステータスのIDが返る。将来、エラーコードを返すようにする予定 → [2010年2月25日更新] 403エラーを返す)
 
         in_reply_to_status_id=ステータスID (オプション)
            返信(reply)対象のステータスIDを指定する。どのステータスに対する返信か明示するのに使用する。
@@ -2996,6 +2996,10 @@ OAuth関連
      メソッド: GET
      API制限:  適用対象外
 
+     応答:
+       トークンの取得に成功すると、以下のような文字列が返る
+          oauth_token=トークン&oauth_token_secret=トークンシークレット
+
 
   oauth/authorize
     ユーザに(Webブラウザ経由で)アクセス許可を求める [本 URL を Web ブラウザに表示させ、ユーザの入力を待つ]
@@ -3064,6 +3068,12 @@ OAuth関連
      メソッド: POST (訳者注: GET でも問題なく通ってしまう)
      API制限:  適用対象外
 
+     応答:
+       認証に成功すると、以下のような文字列が返る
+          oauth_token=トークン&oauth_token_secret=トークンシークレット&user_id=ユーザID&screen_name=スクリーン名
+       認証に失敗した場合は、以下のような文字列が返る
+          Failed to validate oauth signature and token
+
      参考:
        xAuth の場合は、SSL (https) を使う
           https://twitter.com/oauth/access_token
@@ -3098,6 +3108,11 @@ OAuth関連
 
              oauth_signature (必須)
                上記パラメータ(x_auth_username ～ oauth_version)等を元に生成した文字列を、『「アプリケーションの consumer secret(を URL エンコードしたもの)」と「oauth/request_token で取得した token secret(を URL エンコードしたもの)」を '&' で連結したもの』を暗号鍵として HMAC-SHA1 方式で生成した署名を BASE64 エンコードしたもの
+
+          認証に成功すると、以下のような応答が返る
+             oauth_token=トークン&oauth_token_secret=トークンシークレット&user_id=ユーザID&screen_name=スクリーン名&x_auth_expires=トークンの有効期限
+
+                x_auth_expires=0 の場合、トークンの有効期限は無期限となる(いまのところ、常に 0 になる)
 
 
 検索関連のAPI
@@ -3355,10 +3370,22 @@ OAuth関連
      メソッド: GET
      API制限:  適用対象  (IPアドレス単位で制限。同一APアドレスからの「REST API」の実行は1時間辺り150回まで)
 
+     応答例:
+        <?xml version="1.0" encoding="UTF-8" ?> 
+        <locations type="array">
+            <location>
+                <woeid>23424803</woeid> 
+                <name>Ireland</name> 
+                <placeTypeName code="12">Country</placeTypeName> 
+                <country type="Country" code="IE">Ireland</country> 
+                <url>http://where.yahooapis.com/v1/place/23424803</url> 
+            </location>
+            ……
+        </locations>
+
      参考:
        ・WOEID (a Yahoo! Where On Earth ID) に関しては、以下のWebページを参照のこと
           http://developer.yahoo.com/geo/geoplanet/
-       ・2009年11月17日現在、引数を指定しない場合は trends/current と同一の結果が返る模様 (引数を指定した場合はエラーになる)
        ・取得できる件数は最大何件なのか、今のところ不明
 
 
@@ -3380,6 +3407,32 @@ OAuth関連
      認証: 不要
      メソッド: GET
      API制限:  適用対象  (IPアドレス単位で制限。同一APアドレスからの「REST API」の実行は1時間辺り150回まで)
+
+     応答例:
+        <?xml version="1.0" encoding="UTF-8" ?> 
+        <matching_trends type="array">
+            <trends as_of="2010-02-26T07:45:02Z">
+                <locations>
+                    <location>
+                        <woeid>23424803</woeid> 
+                        <name>Ireland</name> 
+                    </location>
+                </locations>
+                <trend query="Joannie+Rochette" url="http://search.twitter.com/search?q=Joannie+Rochette">Joannie Rochette</trend> 
+                <trend query="Yu-na+Wins+Gold" url="http://search.twitter.com/search?q=Yu-na+Wins+Gold">Yu-na Wins Gold</trend> 
+                <trend query="Andrew+Koenig" url="http://search.twitter.com/search?q=Andrew+Koenig">Andrew Koenig</trend> 
+                <trend query="Health+Care+Summit" url="http://search.twitter.com/search?q=Health+Care+Summit">Health Care Summit</trend> 
+                <trend query="Union+Budget+2010" url="http://search.twitter.com/search?q=Union+Budget+2010">Union Budget 2010</trend> 
+                <trend query="Kim+Yu-Na" url="http://search.twitter.com/search?q=Kim+Yu-Na">Kim Yu-Na</trend> 
+                <trend query="Minister+Pranab+Mukherjee" url="http://search.twitter.com/search?q=Minister+Pranab+Mukherjee">Minister Pranab Mukherjee</trend> 
+                <trend query="Google+Buzz" url="http://search.twitter.com/search?q=Google+Buzz">Google Buzz</trend> 
+                <trend query="NFL+Combine" url="http://search.twitter.com/search?q=NFL+Combine">NFL Combine</trend> 
+                <trend query="Canadian+women" url="http://search.twitter.com/search?q=Canadian+women">Canadian women</trend> 
+            </trends>
+        </matching_trends>
+
+     参考:
+       指定した地点付近の「ホットな情報」がない場合は、Twitter 全体での「ホットな情報」(trends/current 相当)を返す模様
 
 
 検索条件保存
@@ -3903,6 +3956,10 @@ OAuth関連
 
 
 変更履歴
+  2010年 2月26日 第四十六版 (2010年2月25日版原本がベース)
+     (1) 「ステータス関連のAPI」の update を更新 (140文字より長い発言を投稿しようとすると403エラーが返るようになった)
+     (2) 「地域情報検索関連のAPI」のtrends/available に“応答例”を追加。“参考”を更新
+     (3) 「地域情報検索関連のAPI」のtrends/location に“応答例”と“参考”を追加
   2010年 2月24日 第四十五版 (2010年2月17日版原本がベース)
      (1)「OAuth 関連」の oauth/access_token の“メソッド”を修正し、“訳者注”を追加。xAuth の説明を更新
   2010年 2月20日 第四十四版 (2010年2月17日版原本がベース)
