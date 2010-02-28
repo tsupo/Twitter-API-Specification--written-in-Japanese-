@@ -1,7 +1,7 @@
-﻿Twitter API 仕様書         <!-- おまじない → --><title>Twitter API 仕様書 日本語訳 第四十六版 (2010年2月26日版)</title><pre><!-- ← おまじない -->
+﻿Twitter API 仕様書         <!-- おまじない → --><title>Twitter API 仕様書 日本語訳 第四十七版 (2010年2月28日版)</title><pre><!-- ← おまじない -->
   日本語訳: tsupo (http://watcher.moe-nifty.com/  mailto:tsupo@na.rim.or.jp)
 
-  http://apiwiki.twitter.com/Twitter-API-Documentation の2010年2月25日版の大雑把な日本語訳
+  http://apiwiki.twitter.com/Twitter-API-Documentation の2010年2月28日版の大雑把な日本語訳
   (ただし、そのまま翻訳したわけではなく、一部、意訳。また、現時点の実装状況に合わせて、内容を修正している)
 
 
@@ -3080,6 +3080,11 @@ OAuth関連
         または
           https://api.twitter.com/oauth/access_token
 
+          注意: (2010年2月27日以前は誰でも使用可能だったが、いまは) xAuth によるアクセストークンの取得を行ないたい場合は、xAuth を使いたい旨、api@twitter.com へメールで連絡する必要がある。
+                xAuth の使用許可のないクライアントからのアクセスに対しては 401 エラーを返す。
+                xAuth は Webベースのアプリケーションでは使わない方がいいが、BASIC認証からフルOAuthへ移行する中間点として、とりあえずxAuthに対応(しておいて、後日、フルOAuthに対応)する、というやり方は問題ない。
+
+
           引数は以下の通り
 
              x_auth_username (必須)
@@ -3956,6 +3961,8 @@ OAuth関連
 
 
 変更履歴
+  2010年 2月28日 第四十七版 (2010年2月28日版原本がベース)
+     (1) 「OAuth 関連」の oauth/access_token の xAuth の説明を更新、注意書きを追加
   2010年 2月26日 第四十六版 (2010年2月25日版原本がベース)
      (1) 「ステータス関連のAPI」の update を更新 (140文字より長い発言を投稿しようとすると403エラーが返るようになった)
      (2) 「地域情報検索関連のAPI」のtrends/available に“応答例”を追加。“参考”を更新
