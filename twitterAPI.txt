@@ -1,7 +1,7 @@
-﻿Twitter API 仕様書         <!-- おまじない → --><title>Twitter API 仕様書 日本語訳 第四十八版 (2010年3月2日版)</title><pre><!-- ← おまじない -->
+﻿Twitter API 仕様書         <!-- おまじない → --><title>Twitter API 仕様書 日本語訳 第四十九版 (2010年3月3日版)</title><pre><!-- ← おまじない -->
   日本語訳: tsupo (http://watcher.moe-nifty.com/  mailto:tsupo@na.rim.or.jp)
 
-  http://apiwiki.twitter.com/Twitter-API-Documentation の2010年3月2日版の大雑把な日本語訳
+  http://apiwiki.twitter.com/Twitter-API-Documentation の2010年3月3日版の大雑把な日本語訳
   (ただし、そのまま翻訳したわけではなく、一部、意訳。また、現時点の実装状況に合わせて、内容を修正している)
 
 
@@ -2765,8 +2765,8 @@ list の登録内容に関する API
         list_id=リストの名前 (必須)
           メンバー追加対象の list の名前を指定する
 
-        id=ユーザID (必須)
-          list に追加したいユーザの ID を指定する
+        id=ユーザID または スクリーン名(必須)
+          list に追加したいユーザの ID、またはスクリーン名を指定する
 
           例:
             http://api.twitter.com/1/twitterapi/team/members.xml に対して、以下のような内容の application/x-www-form-urlencoded 形式のデータを POST する
@@ -2815,7 +2815,7 @@ list の登録内容に関する API
        (format は xml, json のうちのいずれかを指定)
 
      引数:
-        user=確認対象のリストの作成者のスクリーン名 (必須)
+        user=確認対象のリストの作成者のユーザID、またはスクリーン名 (必須)
 
         list_id=リストの名前 (必須)
           確認対象の list の名前を指定する
@@ -2889,7 +2889,7 @@ list の購読に関する API
        (format は xml, json のうちのいずれかを指定)
 
      引数:
-        user=リスト作成者のスクリーン名 (必須)
+        user=リスト作成者のユーザID または スクリーン名 (必須)
 
         list_id=リストの名前 (必須)
           購読解除対象の list の名前を指定する
@@ -4173,6 +4173,10 @@ OAuth関連
 
 
 変更履歴
+  2010年 3月 3日 第四十九版 (2010年3月3日版原本がベース)
+     (1) 「list の登録内容に関する API」の GET list members id の“user 引数”の説明を変更 (スクリーン名以外にユーザIDも指定できるようになった)
+     (2) 「list の登録内容に関する API」の POST list members の“id 引数”の説明を変更 (ユーザID以外にスクリーン名も指定できるようになった)
+     (3) 「list 関連のAPI」の DELETE list subscribers の“user 引数”の説明を変更 (スクリーン名以外にユーザIDも指定できるようになった)
   2010年 3月 2日 第四十八版 (2010年3月2日版原本がベース)
      (1) 「位置情報関連のAPI」を新設。geo/reverse_geocode と geo/id を追加
      (2) 「ステータス関連のAPI」の update に“place_id 引数”と“display_coordinates 引数”を追加
